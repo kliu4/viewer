@@ -1,0 +1,139 @@
+/* 
+    Document   : viewer
+    Created on : Sep 6, 2012, 6:56:01 PM
+    Author     : kai
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+
+.zoomfull{
+    background-image:url('../images/icon_zoomfull.png');
+    height:20px;
+    width:20px;
+}
+
+.zoomlayer{
+    background-image:url('../images/icon_zoomlayer.png');
+    height:20px;
+    width:20px;
+}
+.zoomin{
+    background-image:url('../images/icon_zoomin.png');
+    height:20px;
+    width:20px;
+}
+
+.zoomout{
+    background-image:url('../images/icon_zoomout.png');
+    height:20px;
+    width:20px;
+}
+
+.pan{
+    background-image:url('../images/icon_pan.png');
+    height:20px;
+    width:20px;
+}
+
+.resultset_previous{
+    background-image:url('../images/resultset_previous.png');
+    height:20px;
+    width:20px;
+}
+
+.resultset_next{
+    background-image:url('../images/resultset_next.png');
+    height:20px;
+    width:20px;
+}
+
+.projchooser{
+    width:'auto';
+    min-width: 170px;
+}
+
+.addLayer{
+    background-image:url('../images/add_layer.png');
+    height:20px;
+    width:20px;
+}
+
+.deleteLayer{
+    background-image:url('../images/delete_layer.png');
+    height:20px;
+    width:20px;
+}
+
+.layerOpacity{
+    background-image:url('../images/opacity.png');
+    height:20px;
+    width:20px;
+}
+
+.wmsInfo{
+    background-image:url('../images/wmsinfo.png');
+    height:20px;
+    width:20px;
+}
+
+.wmsTime{
+    background-image:url('../images/wmstime.gif');
+    height:20px;
+    width:20px;
+}
+
+.layerStyles{
+    background-image:url('../images/layerstyles.png');
+    height:20px;
+    width:20px;
+}
+
+.savewmc{
+    background-image:url('../images/icon_savewmc.png');
+    height:20px;
+    width:20px;
+}
+
+.loadwmc{
+    background-image:url('../images/icon_loadwmc.png');
+    height:20px;
+    width:20px;
+}
+
+.selectfile{
+    background-image:url('../images/icon_selectfile.png') !important;
+}
+
+.printmap{
+    background-image:url('../images/icon_print.png');
+    height:20px;
+    width:20px;
+}
+
+.baselayeropacity{
+    background-image:url('../images/baselayeropacity.png');
+    height:20px;
+    width:20px;
+}
+.selectfile {
+    background:url(../images/icon_selectfile.png)  no-repeat 0 0 !important;
+}
+
+.query {
+    background:url(../images/icon_featureinfo.png) ;
+}
+
+div.map-overlay div.overlay-element {
+display:inline;
+float:left;
+margin:5px;
+}
+
+div.map-overlay {
+top:10px;
+position:absolute;
+right:10px;
+z-index:1000;
+//width: 250px; /* For IE */
+}
