@@ -1,4 +1,4 @@
-<%-- 
+﻿<%-- 
     Document   : index
     Created on : Sep 2, 2012, 11:28:27 AM
     Author     : chilukey
@@ -33,12 +33,5 @@
 
     </head>
     <body>
-<!--       <div id="blackbar">
-    <div style="padding: 8px 10px 0 10px; background-color:black;text-align: center; font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif; font-size: 18px;">
-      <span style="float: right; font-weight: 100;"><a href="http://data.gov.uk">DATA.GOV.UK</a></span>
-      <a href="javascript:history.back();" style="float: left;">« Go Back</a>
-      Map Explorer
-    </div>
-  </div> -->
     </body>
 </html>
