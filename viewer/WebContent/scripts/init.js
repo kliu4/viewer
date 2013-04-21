@@ -8,9 +8,9 @@
 
 Ext.namespace('Viewer');
 
-var mapPanel, tree, map, addWmsWin, form, opcityWin,  nodeOverlays_Folder, zoomSelector, combo, leftPanel, root, options;
+var mapPanel, tree, map, addWmsWin, form, opcityWin, layersPanel,  legendPanel, nodeOverlays_Folder, zoomSelector, combo, leftPanel, eastPanel, root, options, loadMask;
 var activeNodes = [];
-var tabMetadataItems = [];
+var tabMetadataItems = [], proj_all_services = [], wmslst = [];
 var simplemode = false;
 var select = null;
 var bProj = true;							
@@ -19,6 +19,7 @@ var baselayer;
 var viewerport ;
 var lurl = document.URL;
 var wmclayers = [];
+var toolbarItems=[],action,actions=[],toctoolbar = [], simpletoolbarItems = [];
 // simple array store of projection
 var store = new Ext.data.ArrayStore({
     fields: ['name', 'projection'],
@@ -61,7 +62,7 @@ var baselayerlst = [new OpenLayers.Layer.XYZ(
 		                "http://otile4.mqcdn.com/tiles/1.0.0/map/${z}/${x}/${y}.png"
 		            ],
 		            {
-		                    transitionEffect: "resize",   
+		                transitionEffect: "resize",   
 			            buffer: 0,
 			            sphericalMercator: true
 		            }),
@@ -184,7 +185,6 @@ function removeLayerHandler(node) {
 };
    
 function zoomlayer(layer){
-        
         	var curlayer = layer;
             if (curlayer) {
                 if ( curlayer.llbbox) {
@@ -218,7 +218,7 @@ function addKMLfromURL(kmlurl){
 		  projection: new OpenLayers.Projection("EPSG:4326"),
 		    strategies: [new OpenLayers.Strategy.Fixed()],
 		    protocol: new OpenLayers.Protocol.HTTP({
-		        url: "GetRemoteService?url="+kmlurl+"&servicetype=kml",
+		        url: "viewer/GetRemoteService?url="+kmlurl+"&servicetype=kml",
 		        format: new OpenLayers.Format.KML({
 		            extractStyles: true, 
 		            extractAttributes: true,
@@ -275,7 +275,7 @@ function addKMZfromURL(kmzurl){
 		  projection: new OpenLayers.Projection("EPSG:4326"),
 		    strategies: [new OpenLayers.Strategy.Fixed()],
 		    protocol: new OpenLayers.Protocol.HTTP({
-		        url: "Kmztokml?url="+kmzurl,
+		        url: "viewer/Kmztokml?url="+kmzurl,
 		        format: new OpenLayers.Format.KML({
 		            extractStyles: true, 
 		            extractAttributes: true,
@@ -297,166 +297,195 @@ function addKMZfromURL(kmzurl){
     root.appendChild(node);
 };
 
-Ext.onReady(function() {
-
 	//If we have options, we can initialize the map
-    function setmap(options, baselayer){
-         map =new OpenLayers.Map('map', options);
-         map.addLayer(baselayer);
-    }
-
-    // if true a google layer is used, if false
-    // the bluemarble WMS layer is used
-
-    //Register windows in WindowManager
-	//default base layers
-      
-    //root node of the left tree which shows the baselayer and added map services
-    root = new Ext.tree.TreeNode({
-        expanded: true, // allow children autoload, and thus layers 
-    }); 
-    
-    // the childern nodes of root  
-    // it is a folder
-    // advanced mode
-    nodeOverlays_Folder = new Ext.tree.TreeNode({text:
-        "Overlays", cls: "folder",
-        expanded: true});
-    
-    var nodeBase_Folder = new Ext.tree.TreeNode({text:
-        "Base Layer", cls: "folder",
-        expanded: true});
-    
-	//rerpojection
-    var repro = false;
-    
-    //parse the url
-    //http://localhost:8080/viewer/?url=http://mrdata.usgs.gov/services/copper-smelters&servicetype=wms
-    try
-    {
-    	var uri = new Uri(location.search);
-    	//revised the jsUri to case insensitive
-    	var tmpurls = uri.getQueryParamValue('url');
-    	var urls= typeof tmpurls === 'undefined'?[]:tmpurls.split(',');
-    	var tmpStypes = uri.getQueryParamValue('servicetype');
-        if(typeof tmpStypes !== 'undefined')
-                tmpStypes = tmpStypes.toUpperCase();
-    	var serviceTypes=typeof tmpStypes === 'undefined'?[]:tmpStypes.split(',');
-    	if(urls.length !== serviceTypes.length){
-    	    Ext.MessageBox.show({
-    	        title: 'Waring',
-    	        msg: "Number of url doesn't match servicetype",
-    	        buttons: Ext.MessageBox.OK,
-    	        icon: Ext.MessageBox.WARNING
-    	    });
-    	    urls = [];
-    	    serviceTypes = [];
-    	}
-        if(urls.length==0){
-                options =  OpenLayers.Util.extend({projection: "EPSG:3857"},optionlst[0]);
-	        baselayer = baselayerlst[0];
-                setmap(options,baselayer);
-                setViewer();
-        }
-    	// mode
-    	var tmpmode=uri.getQueryParamValue('mode');
-    	if(typeof tmpmode === 'undefined')
-    		mode = 'simple';
-    	else if(tmpmode.toUpperCase() === 'SIMPLE')
-    		mode = 'simple';
-    	else if(tmpmode.toUpperCase() === 'ADVANCED')
-    		mode = 'advanced';
-    	else{
-    	    Ext.MessageBox.show({
-    	        title: 'Waring',
-    	        msg: "Mode should be simple or advanced! Return to use simple mode",
-    	        buttons: Ext.MessageBox.OK,
-    	        icon: Ext.MessageBox.WARNING
-    	    });
-    	    mode = 'simple';
-    	}
-    	
+function setmap(options, baselayer){
+    map =new OpenLayers.Map('map', options);
+    map.addLayer(baselayer);
+};
+   
 	//find the projection 
 	// 1) if user set the projection in the URL
-	function getProjIndex(proj){
-		for(var i1 = 0; i1 < projlst.length; ++i1){
-			for(var i2 = 0; i2 < projlst[i1].length; ++i2){
-				if(projlst[i1][i2] === proj){                   //check if we can find the initProj in projlst
-					return i1;
-				}
-			}
-			// If we can't fined the projection in proj list
-		}
-		return 0;
- 	};
+function getProjIndex(proj){
+   for(var i1 = 0; i1 < projlst.length; ++i1){
+      for(var i2 = 0; i2 < projlst[i1].length; ++i2){
+         if(projlst[i1][i2] === proj){                   //check if we can find the initProj in projlst
+            return i1;
+         }
+      }		
+   }
+   // If we can't fined the projection in proj list
+   return 0;
+};
+ 	
+//add layer from getmap request
+function addLayerFromGetMap(turi){
+   var layers = turi.getQueryParamValue('LAYERS');
+   if(typeof layers === 'undefined') return;
+   else{ 
+   	  var wms = new OpenLayers.Layer.WMS(layers, 
+      turi.toString().split('?')[0], {
+         layers: layers, 
+      	 format:'image/png',
+      	 transparent:'TRUE'
+      },{
+         ratio:1,
+         visibility: true
+      });
+	  map.addLayer(wms);
+   }
+}; 
+    
+function processLayer(layerM, url, node) {
+   var checkedLayers = 0;
+   for(var i = 0, len = layerM.nestedLayers.length; i < len; ++i) {
+   	  var checked = false;
+   	  layer = layerM.nestedLayers[i];
+   	  if(layer.llbbox && (!layer.nestedLayers || layer.nestedLayers.length == 0)&& checkedLayers == 0){
+   	     checked = true;
+   	     checkedLayers = 1;
+   	  }
+   	  var wmsLayer = createWMSLayer(layer,url,checked);
+   	  if(typeof wmsLayer !== 'undefined'){
+   	  	map.addLayer(wmsLayer);
+   	  	if(checked)
+   	  	  zoomlayer(wmsLayer);
+   	  }	       
+   	  var optTreeNode = {text: layer.title || layer.name, 
+      // use nodeType 'node' so no AsyncTreeNodes are created
+                nodeType: 'node',
+                layer: wmsLayer,
+                expanded: true,
+                leaf: (layer.nestedLayers.length === 0)};
+      if(!layer.nestedLayers || layer.nestedLayers.length == 0)
+          optTreeNode = OpenLayers.Util.extend(optTreeNode, {checked:checked})
+      var n =new Ext.tree.TreeNode(optTreeNode);
+      if(checked)
+         activeNodes.push(n);
+      if(n){
+              node.appendChild(n);
+      }
+      if (layer.nestedLayers) {
+            processLayer(layer, url, n);
+      }
+   }
+};
 
-	var initProj=uri.getQueryParamValue('srs');
-    	if(typeof initProj !== 'undefined'){
-		var i = getProjIndex(initProj);
-		options =  OpenLayers.Util.extend({projection:initProj},optionlst[i]);
-		baselayer = baselayerlst[i];
-    		//If there is no Mercator or 4326?
-    	}
+function createWMSLayer(layer, url, checked){
+	layerParams = {format:'image/png', transparent:'TRUE'};
+    layerOptions = {ratio:1,  isBaseLayer: false};
+    layeroptions = OpenLayers.Util.extend({minScale: layer.minScale,
+            	queryable: layer.queryable, maxScale: layer.maxScale,
+            	metadataURL: layer.metadataURL,
+            	dimensions: layer.dimensions,
+                styles: layer.styles,
+                llbbox: layer.llbbox},
+                layerOptions);
+    layeroptions = OpenLayers.Util.extend(layeroptions, checked?{visibility:true}:{visibility:false});
+    var wmsLayer = new OpenLayers.Layer.WMS( layer.title, url,
+                        {layers: layer.name,  transparent:'TRUE'},
+                        layeroptions);
+    if (layer.styles && layer.styles.length > 0) {
+                        var style = layer.styles[0];
+                        if (style.legend && style.legend.href) {
+                            wmsLayer.legendURL = style.legend.href;
+                        }
+                    }
+    return wmsLayer;
+};
+
+ //add all layers in the wms 
+function addwms(caps){
+  processLayer(caps.capability, caps.capability.request.getmap.href,root);
+};	
+ 
+Ext.onReady(function() {
+	    //root node of the left tree which shows the baselayer and added map services
+   root = new Ext.tree.TreeNode({
+        expanded: true // allow children autoload, and thus layers 
+   }); 
+   var uri = new Uri(location.search);
+   //revised the jsUri to case insensitive
+   // mode
+   var tmpmode=uri.getQueryParamValue('mode');
+   if(typeof tmpmode === 'undefined')
+      mode = 'simple';
+   else if(tmpmode.toUpperCase() === 'SIMPLE')
+      mode = 'simple';
+   else if(tmpmode.toUpperCase() === 'ADVANCED')
+   mode = 'advanced';
+   else{
+      Ext.MessageBox.show({
+         title: 'Warning',
+         msg: "Mode should be simple or advanced! Return to use simple mode",
+         buttons: Ext.MessageBox.OK,
+         icon: Ext.MessageBox.WARNING
+      });
+      mode = 'simple';
+   }
+   
+   initTbar();
+   initViewer();
+   
+   try{
+   	  var tmpurls = uri.getQueryParamValue('url');
+      var urls= typeof tmpurls === 'undefined'?[]:tmpurls.split(',');
+      var tmpStypes = uri.getQueryParamValue('servicetype');
+      if(typeof tmpStypes !== 'undefined')
+         tmpStypes = tmpStypes.toUpperCase();
+      var serviceTypes=typeof tmpStypes === 'undefined'?[]:tmpStypes.split(',');
+      if(urls.length !== serviceTypes.length){
+    	    Ext.MessageBox.alert("Warning",
+                        "Url doesn't match servicetype");
+    	    urls = [];
+    	    serviceTypes = [];
+      }
+      if(urls.length==0){
+         options =  OpenLayers.Util.extend({projection: "EPSG:3857"},optionlst[0]);
+	     baselayer = baselayerlst[0];
+         setmap(options,baselayer);
+         loadMask.hide();
+         loadMapPanel();
+      }
+      
+      var initProj=uri.getQueryParamValue('srs');
+      if(typeof initProj !== 'undefined'){
+         var i = getProjIndex(initProj);
+         options =  OpenLayers.Util.extend({projection:initProj},optionlst[i]);
+         baselayer = baselayerlst[i];
+      }
 	// 2) if there is kml or kmz in the URL, 
-	// We should use EPSG3857
-	if(serviceTypes.indexOf("KML")>=0||serviceTypes.indexOf("KMZ")>=0){
-		options =  OpenLayers.Util.extend({EPSG:3857},optionlst[0]);
-		baselayer = baselayerlst[0];
-	}
-	
-	if(typeof map === 'undefined' && typeof options !== 'undefined'){
-		setmap(options,baselayer);
-                setViewer();
-	}
-    	// try to find the common projection
-    	//var responselst = [];
-    	var proj_all_services = [];
-    	var wmslst = [], metadatalst = [];
-    	var getmaplst = []; // for those url which contians request=getmap
-    	var projfromGetMap; //Get the first one if there are more than 1 GetMap
-    	var bMercator = false;
-    	var b4326 = false;
-    	
-        //add layer from getmap request
-        function addLayerFromGetMap(turi){
-	     var layers = turi.getQueryParamValue('LAYERS');
-	     if(typeof layers === 'undefined')
-	             return;
-	     else{
-	             var wms = new OpenLayers.Layer.WMS(layers, 
-                     turi.toString().split('?')[0], {
-						layers: layers, 
-						format:'image/png',
-						transparent:'TRUE'
-					},{
-						ratio:1,
-						visibility: true
-					});
-		      map.addLayer(wms);
-	           }
-         } 
-    	// we need to know the projection from WMS
-    	for(var i=0, len = urls.length; i < len; i++){
-    		var tmptype = serviceTypes[i].toUpperCase();
-    		if(tmptype === 'WMS'){
-    			var wmsgetmapuri = new Uri(decodeURIComponent(urls[i]));
-    			var request = wmsgetmapuri.getQueryParamValue('request');
-    			projfromGetMap = wmsgetmapuri.getQueryParamValue('CRS');
-    			if(typeof request !== 'undefined' && request.toUpperCase() === 'GETMAP'){
-    			     if(typeof options === 'undefined'){
-                                 // GetMapRequest always have SRS
-                                 var projFromGetMap =  wmsgetmapuri.getQueryParamValue('srs').toUpperCase();
-                                 var i = getProjIndex(initProj);
-                                 options =  OpenLayers.Util.extend({projection:initProj},optionlst[i]);
-                                 baselayer = baselayerlst[i];
-                                 if(typeof map === 'undefined' && typeof options !== 'undefined'){
-		                     setmap(options,baselayer);
-	                         }
-                             }
-                             addLayerFromGetMap(wmsgetmapuri);
-    			}else{
-                        Ext.Ajax.request({
-                    	url:  "GetRemoteService",
+      if(serviceTypes.indexOf("KML")>=0||serviceTypes.indexOf("KMZ")>=0){
+      	 options =  OpenLayers.Util.extend({EPSG:3857},optionlst[0]);
+         baselayer = baselayerlst[0];
+      }
+      if(typeof map === 'undefined' && typeof options !== 'undefined'){
+      	 setmap(options,baselayer);
+         loadMask.hide();
+         loadMapPanel();
+      }
+      
+      //Check the projection list from WMS
+      for(var i=0, len = urls.length; i < len; i++){
+         var tmptype = serviceTypes[i].toUpperCase();
+         if(tmptype === 'WMS'){
+            var wmsgetmapuri = new Uri(decodeURIComponent(urls[i]));
+            var request = wmsgetmapuri.getQueryParamValue('request');
+            projfromGetMap = wmsgetmapuri.getQueryParamValue('CRS');
+            if(typeof request !== 'undefined' && request.toUpperCase() === 'GETMAP'){
+            	if(typeof options === 'undefined'){
+            		// GetMapRequest always have SRS
+            		var projFromGetMap =  wmsgetmapuri.getQueryParamValue('srs').toUpperCase();
+            		var i = getProjIndex(initProj);
+            		options =  OpenLayers.Util.extend({projection:initProj},optionlst[i]);
+            		baselayer = baselayerlst[i];
+            		if(typeof map === 'undefined' && typeof options !== 'undefined'){
+            			setmap(options,baselayer);
+            		}
+            	}
+            	addLayerFromGetMap(wmsgetmapuri);
+    		}else{
+    			 Ext.Ajax.request({
+                    	url:  "viewer/GetRemoteService",
                         params:{url:encodeURIComponent(decodeURIComponent(urls[i])),servicetype:serviceTypes[i]},
                         method: 'GET',
                         failure: function(response){
@@ -466,24 +495,21 @@ Ext.onReady(function() {
                             if(typeof map === 'undefined' && typeof options !== 'undefined'){
 		                     setmap(options,baselayer);
                                      setViewer();
-	                    }
-                    	    Ext.MessageBox.show({
-                	        title: 'Waring',
-                	        msg: "Could not get service from input url",
-                	        buttons: Ext.MessageBox.OK,
-                	        icon: Ext.MessageBox.WARNING
-                    	    });
+	                        }
+                    	    Ext.MessageBox.alert("Warning",
+                               "Could not get service from url");
                         },
                         success: function(response){
                           var parser = new OpenLayers.Format.WMSCapabilities();
                           var caps = parser.read(response.responseXML || response.responseText);
                           var srs=caps.capability.layers[0].srs;
-                           for(var name in srs) {
+                          for(var name in srs) {
                               proj_all_services.push(name);
                           }
-                      	   proj_all_services = proj_all_services.filter(function(elem, pos) {
+                      	  proj_all_services = proj_all_services.filter(function(elem, pos) {
                     	    return proj_all_services.indexOf(elem) == pos;
-                          	});
+                          });
+                          
                            //the default selected Proj is 3857
                            var selectedProj;
                     	   for(var i=0, len = proj_all_services.length; i < len; i++){
@@ -491,10 +517,10 @@ Ext.onReady(function() {
                             // 	name: proj_all_services[i],
                             // 	projection:proj_all_services[i]
                             // 	}));
-                            if(proj_all_services[i].toUpperCase() === "EPSG:3857" || proj_all_services[i].toUpperCase() === "EPSG:90013") {
+                              if(proj_all_services[i].toUpperCase() === "EPSG:3857" || proj_all_services[i].toUpperCase() === "EPSG:90013") {
                                   selectedProj = proj_all_services[i].toUpperCase();
                                   break;
-                            }
+                              }
                             }
                     	   if(typeof selectedProj === 'undefined'){
                     		   for(var i=0, len = proj_all_services.length; i < len; i++){
@@ -510,189 +536,79 @@ Ext.onReady(function() {
                              //3) if options still be undefined, we should use the proj from wms
                             if(typeof map === 'undefined' && typeof options === 'undefined'){
                                   var i = getProjIndex(selectedProj);
-		                  options =  OpenLayers.Util.extend({projection:selectedProj},optionlst[i]);
-		                  baselayer = baselayerlst[i];
+		                          options =  OpenLayers.Util.extend({projection:selectedProj},optionlst[i]);
+		                          baselayer = baselayerlst[i];
                                   setmap(options,baselayer);
-                                  setViewer();
+                                  loadMask.hide();
+                                  loadMapPanel();
                             }
-
-                            metadatalst.push(response.responseText);
+                            
                             wmslst.push(caps);
                             addwms(caps);
-                    }});
-    			}
+                            if(typeof tree === 'undefined')
+                              initTtree();
+                        }
+                  }) 
+    		}
 
-    		}
+         }
+        else if(tmptype === "KML"){
+        	addKMLfromURL(urls[i]);
+        	if(typeof tree === 'undefined')
+                              initTtree();
+        }		
+    	else if(tmptype === "KMZ"){
+    		 addKMZfromURL(urls[i]);
+    		 if(typeof tree === 'undefined')
+                              initTtree();
     	}
-    	    	
-    	for(var i=0, len = urls.length; i < len; ++i){
-    		if(serviceTypes[i].toUpperCase() === "KML"){
-    			addKMLfromURL(urls[i]);
-    		}
-    		else if(serviceTypes[i].toUpperCase() === "KMZ"){
-    			addKMZfromURL(urls[i]);
-    		}
-    	}
-    }catch(err)
-    {
-		    Ext.MessageBox.show({
-	        title: 'Waring',
-	        msg: "There is error in URL",
-	        buttons: Ext.MessageBox.OK,
-	        icon: Ext.MessageBox.WARNING
-	    });
+}
+      
+   }catch(err)
+   {
+	    Ext.MessageBox.alert("Warning",
+                        "Fail to load map");
 	    urls = [];
 	    serviceTypes = [];
-    }
-    //add layer from getmap request
-    function addLayerfromGetMap(turi){
-		var layers = turi.getQueryParamValue('LAYERS');
-		if(typeof layers === 'undefined')
-			return;
-		else{
-			var wmsLayer = new OpenLayers.Layer.WMS(layers, 
-					turi.toString().split('?')[0], 
-					{
-						layers: layers, 
-						format:'image/png',
-						transparent:'TRUE'
-					},{
-						ratio:1,
-						visibility: true
-					});
-			map.addLayer(wmsLayer);
-                        zoomlayer(wmsLayer);
+   }
+});
 
-		}
-    }
-    //add all layers in the wms 
-    function addwms(caps){
-    	if(caps.capability){
-    		for(var i = 0; i < caps.capability.layers.length; ++i){
-        		var layer = caps.capability.layers[i];
-        		if(layer.queryable === null)
-        			return;
-                var wmsLayer = null;     
-                if (layer.name) {
-                	layerParams = {format:'image/png', transparent:'TRUE'};
-                	layerOptions = {ratio:1,  isBaseLayer: false};
-                	layeroptions = OpenLayers.Util.extend({minScale: layer.minScale,
-                        queryable: layer.queryable, maxScale: layer.maxScale,
-                        metadataURL: layer.metadataURL,
-                        dimensions: layer.dimensions,
-                        styles: layer.styles,
-                        llbbox: layer.llbbox},
-                            layerOptions);
-
-                	if(i === 0)
-                    	layeroptions = OpenLayers.Util.extend(layeroptions, {visibility:true});
-                	else
-                		layeroptions = OpenLayers.Util.extend(layeroptions, {visibility:false});
-                	wmsLayer = new OpenLayers.Layer.WMS( layer.title, caps.capability.request.getmap.href,
-                        {layers: layer.name,  transparent:'TRUE'},
-                        layeroptions);
-                    if (layer.styles && layer.styles.length > 0) {
-                        var style = layer.styles[0];
-                        if (style.legend && style.legend.href) {
-                            wmsLayer.legendURL = style.legend.href;
-                        }
-                    }
-                   map.addLayer(wmsLayer);
-                }
-                if(i===0){
-                	node =new Ext.tree.TreeNode({layer: wmsLayer, text:
-            			layer.title,checked:true});
-                	activeNodes.push(node);
-                	zoomlayer(wmsLayer);
-                }else{
-                	node =new  Ext.tree.TreeNode({layer: wmsLayer, text:
-            			layer.title,checked:false});
-                }
-                //node.addListener("click", this.click, this.scope);
-
-   
-        		//var node = addLayer(layer,caps.capability.request.getmap.href,null);
-        		if(mode === 'simple'){
-        			root.appendChild(node);
-        		}
-        		if(mode === 'advanced'){
-//        		    root.appendChild(nodeBase_Folder);
-//        		    root.appendChild(nodeOverlays_Folder);
-        			root.appendChild(node);
-        		}
-        	}
-    	}
-    }
-    
+function initTbar(){
+   // ZoomToMaxExtent control, a "button" control
+   action = new GeoExt.Action({
+      id: "zoomfull",
+      control: new OpenLayers.Control.ZoomToMaxExtent(),
+      map: map,
+      iconCls:'zoomfull',
+      tooltip:"Zoom Full",
+      handler:function(){
+      	map.zoomToExtent(baselayer.maxExtent);
+      	}
    });
-
-function setViewer(){
- var zoomStore = new GeoExt.data.ScaleStore({
-	  map: map
-	  }); 
-  
-	var zoomSelector = new Ext.form.ComboBox({
-        emptyText: 'Zoom level',
-        tpl: '<tpl for="."><div class="x-combo-list-item">1 : {[parseInt(values.scale)]}</div></tpl>',
-        editable: false,
-        triggerAction: 'all',
-        mode: 'local',
-        store: zoomStore,
-        width: 110
-    });
-
-    zoomSelector.on('click', function(evt){evt.stopEvent();});
-    zoomSelector.on('mousedown', function(evt){evt.stopEvent();});
-    zoomSelector.on('select', function(combo, record, index) {
-        map.zoomTo(record.data.level);
-        zoomSelector.setValue("1:"+record.data.scale);
-    },zoomSelector);
-    var zoomSelectorWrapper = new Ext.Panel({
-        items: [zoomSelector],
-        cls: 'overlay-element overlay-scalechooser',
-        border: false,});
-   
-    var toolbarItems=[],action,actions=[],toctoolbar = [];  
-   
-    var simpletoolbarItems = [];
-    // ZoomToMaxExtent control, a "button" control
-    action = new GeoExt.Action({
-        id: "zoomfull",
-        control: new OpenLayers.Control.ZoomToMaxExtent(),
-        map: map,
-        iconCls:'zoomfull',
-        tooltip:"Zoom Full",
-        handler:function(){
-           map.zoomToExtent(baselayer.maxExtent);
-        }
-    });
-    actions["zoomfull"] = action;
-    toolbarItems.push(action);
-   
-    simpletoolbarItems.push(action);
-    action = new GeoExt.Action({
-        id: "zoomlayer",
-        map: map,
-        iconCls:'zoomlayer',
-        tooltip:"Zoom to layer",
-        handler:function(){
-            if (activeNodes.length >= 1) {
-            	var curlayer = activeNodes[0].attributes.layer;
-                if (curlayer) {zoomlayer(curlayer)} else {
-                    Ext.MessageBox.alert("NoSeletedLayer",
-                        "Please select layer to zoom");
-                }
-            } else {
-                Ext.MessageBox.alert("NoSeletedLayer",
+   actions["zoomfull"] = action;
+   toolbarItems.push(action);
+   simpletoolbarItems.push(action);
+    
+   action = new GeoExt.Action({
+      id: "zoomlayer",
+      map: map,
+      iconCls:'zoomlayer',
+      tooltip:"Zoom to layer",
+      handler:function(){
+      if (activeNodes.length >= 1) {
+         var curlayer = activeNodes[0].attributes.layer;
+         if (curlayer) 
+            zoomlayer(curlayer)
+      } else {
+         Ext.MessageBox.alert("NoSeletedLayer",
                 "Please select layer to zoom");
-            }
-        }
-    });
-    
-    actions["zoomlayer"] = action;
-    toolbarItems.push(action);
-    simpletoolbarItems.push(action);
-    
+         }
+      }
+   });    
+   actions["zoomlayer"] = action;
+   toolbarItems.push(action);
+   simpletoolbarItems.push(action);
+   
     action = new GeoExt.Action({
         id: "zoomin",
         control: new OpenLayers.Control.ZoomBox(),
@@ -734,103 +650,62 @@ function setViewer(){
     actions["pan"] = action;
     toolbarItems.push(action);
     toolbarItems.push("-");
-    
-    simpletoolbarItems.push(action);
+    simpletoolbarItems.push(action); 
     
     // Navigation history - two "button" controls
     ctrl = new OpenLayers.Control.NavigationHistory();
-    map.addControl(ctrl);
-   
-
-	    action = new GeoExt.Action({
+    action = new GeoExt.Action({
 	        id: "resultset_previous",
 	        control: ctrl.previous,
-	        map: map,
 	        iconCls:'resultset_previous',
 	        tooltip:"resultset_previous"
 	    });
-	    actions["resultset_previous"] = action;
-	    toolbarItems.push(action);
+	actions["resultset_previous"] = action;
+	toolbarItems.push(action);
    
     action = new GeoExt.Action({
         id: "resultset_next",
         control: ctrl.next,
-        map: map,
         iconCls:'resultset_next',
         tooltip:"resultset_next"
     });
     actions["resultset_next"] = action;
     toolbarItems.push(action);
-    toolbarItems.push("-");
-
-   
-    var featureinfo = new OpenLayers.Control.WMSGetFeatureInfo({drillDown: true, infoFormat: 'application/vnd.ogc.gml',            eventListeners: {
-    }});
-
-    featureinfolayer = new OpenLayers.Layer.Vector("Feature info", {displayInLayerSwitcher: false,
-        styleMap: new OpenLayers.StyleMap({
-            externalGraphic: OpenLayers.Util.getImagesLocation() + "marker.png",
-            pointRadius: 12
-        })
-    });
-
-
+    toolbarItems.push("-");  
+    
+    var featureinfo = new OpenLayers.Control.WMSGetFeatureInfo({drillDown: true, infoFormat: 'application/vnd.ogc.gml', eventListeners: {}});
     featureinfo.events.on({
         getfeatureinfo: function(evt) {
-        	if (activeNodes.length >= 1) {
-            	var curlayer = activeNodes[0].attributes.layer;
-                if (curlayer&&curlayer.CLASS_NAME==="OpenLayers.Layer.WMS") {
-                    if ( curlayer.llbbox) {
-                        // store info as wgs84
-                        var mapProj = map.getProjectionObject();
-                        var wgs84 = new OpenLayers.Projection("EPSG:4326");
-                        var llbbox = curlayer.llbbox;
-                        var minMapxy = new OpenLayers.LonLat(llbbox[0], llbbox[1]).transform(wgs84, mapProj);
-                        var maxMapxy = new OpenLayers.LonLat(llbbox[2], llbbox[3]).transform(wgs84, mapProj);
-
-                        var extent = new OpenLayers.Bounds();
-                        extent.left = minMapxy.lon;
-                        extent.right = maxMapxy.lon;
-                        extent.top = maxMapxy.lat;
-                        extent.bottom = minMapxy.lat;
-                        
-                        var lonlat = map.getLonLatFromViewPortPx(evt.xy);
-                        var point = new OpenLayers.Geometry.Point(lonlat.lon, lonlat.lat);
-                        var HEIGHT=500;
-                        var WIDTH=500;
-                        var x = (point.x- extent.left)/(extent.right - extent.left) * 500;
-                        var y = 500 - (point.y- extent.bottom)/(extent.top - extent.bottom) * 500;
-                        x = Math.floor(x);
-                        y = Math.floor(y);
-                        //'?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=usa:states&QUERY_LAYERS=usa:states&STYLES=&BBOX='+BBOX+'&FEATURE_COUNT=5&HEIGHT='+HEIGHT+'&WIDTH='+WIDTH+'&FORMAT=image%2Fpng&INFO_FORMAT=text%2Fhtml&SRS=EPSG%3A4326&X='+X+'&Y='+Y;
-                        var infourl = curlayer.url + "?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS="+curlayer.name+"&QUERY_LAYERS="+curlayer.name+"&STYLES=&BBOX="+llbbox+"&WIDTH=500&HEIGHT=500&SRS=EPSG%3A4326&X="+x+"&Y="+y;
-                        
-                      Ext.Ajax.request({
+           if (activeNodes.length >= 1) {
+              var curlayer = activeNodes[0].attributes.layer;
+                if (curlayer&&curlayer.CLASS_NAME==="OpenLayers.Layer.WMS") {                        
+                        var url = curlayer.getFullRequestString({
+                                         REQUEST: "GetFeatureInfo",
+                                         EXCEPTIONS: "application/vnd.ogc.se_xml",
+                                         BBOX: map.getExtent().toBBOX(),
+                                         X: evt.xy.x,
+                                         Y: evt.xy.y,
+                                         INFO_FORMAT: 'text/plain',
+                                         LAYERS: curlayer.name,
+                                         QUERY_LAYERS: curlayer.name,
+                                         FEATURE_COUNT: 1,
+                                         WIDTH: map.size.w,
+                                         HEIGHT: map.size.h},
+                                         curlayer.url);
+                     Ext.Ajax.request({
                     	url:  "GetRemoteService",
-                        params:{url:infourl,servicetype:"wmsgetfeatureinfo"},
+                        params:{url:url,servicetype:"wmsgetfeatureinfo"},
                         method: 'GET',
                         failure: function(response){
-                            var text = response.responseText;
                         	Ext.MessageBox.alert("alert",
                                     response.responseText);
                             },
-            
                         success: function(response){
-                        	var feature =  response.responseText.replace(/\n/g,"<p>");
                         	Ext.MessageBox.alert("Feature Information",
-                        			feature);
+                        			setHTML(response));
                             }
                     });
-                       
-                    // If layer has no boundingbox info, use full extent
-                    } else {
-                      
-                    }
-                } else  if (curlayer&&curlayer.CLASS_NAME==="OpenLayers.Layer.Vector"){
-	               	
-                }else{
-                    Ext.MessageBox.alert("NoSeletedLayer",
-                        "Please select layer to get feature information");
+                 } else  if (curlayer&&curlayer.CLASS_NAME==="OpenLayers.Layer.Vector"){
                 }
             } else {
                 Ext.MessageBox.alert("NoSeletedLayer",
@@ -841,7 +716,30 @@ function setViewer(){
             featureinfolayer.destroyFeatures();
         }
     });
-
+    
+    /*
+    * Get the Ajax response and pop up a info bubble
+    */
+    function setHTML(response) {
+       if (response.responseText.indexOf('no results') == -1) {
+          var tplstring = '<table class="olFeatureInfoTable" cellspacing="1" ' +
+            'cellpadding="1"><tbody>';
+        
+          var cat="Unknown", src="Unknown", leg="Unknown", linkinfo="";
+          var lines = response.responseText.split('\n');
+          for (lcv = 0; lcv < (lines.length); lcv++) {
+             var vals = lines[lcv].replace(/^\s*/,'').replace(/\s*$/,'').replace(/ = /,"=").replace(/'/g,'').split('=');
+             if(vals && vals.length == 2) 
+                tplstring += '<tr class="olFeatureInfoRow">' +
+                    '<td width="30%" class="olFeatureInfoColumn"> <b>' + vals[0] +
+                    '</b></td><td width="70%" class="olFeatureInfoValue">' +
+                    vals[1] + '</td></tr>';
+            
+          }
+          tplstring += '</tbody></table>';
+          return tplstring;
+       }
+   }
 
     action = new GeoExt.Action({
     	control: featureinfo,
@@ -854,14 +752,12 @@ function setViewer(){
     });
     actions["query"] = action;
     toolbarItems.push(action);
-    
     toolbarItems.push("-");
     simpletoolbarItems.push(action);
-    
-    //Save the WMC
+
+        //Save the WMC
     action = new GeoExt.Action({
         id: "savewmc",
-        map: map,
         iconCls:'savewmc',
         tooltip:"Save WMC",
         handler:function(){
@@ -873,8 +769,7 @@ function setViewer(){
     
     Viewer.WindowManager.registerWindow("loadwmc", Viewer.LoadWmcWindow, {map: map, id:"loadwmc"});
     action = new GeoExt.Action({
-        //id: "loadwmc",
-        map: map,
+        id: "loadwmc",
         iconCls:'loadwmc',
         tooltip:"Load WMC",
         handler:function(){
@@ -885,47 +780,11 @@ function setViewer(){
     actions["loadwmc"] = action;
     toolbarItems.push(action);
     toolbarItems.push("-");
+    
+};
 
-    //toolbarItems.push(zoomSelectorWrapper);
-    toolbarItems.push("-");
-    toolbarItems.push("->");
-    
-    combo = new Ext.form.ComboBox({
-        store: store,
-        displayField:'name',
-        typeAhead: true,
-        mode: 'local',
-        triggerAction: 'all',
-        selectOnFocus:true,
-        value:map.projection,
-        width:200,
-        listeners:{
-            select:function(combo,record,index){
-                var strProjection = record.get('projection');             
-                var newProjection = new OpenLayers.Projection(strProjection);
-                reproject(map, newProjection, false);
-               
-            }
-        }
-    });
-    
-    actions["loadwmc"] = combo;
-    toolbarItems.push(combo);
-
-    var optMapPanel = {
-        id:"mappanel",
-        border:true,
-        region:"center", 
-        zoom:1,
-        map:map,
-        center: [0, 0]};
-    
-    map.zoomToMaxExtent();
-    
-    optMapPanel = mode == 'simple'?OpenLayers.Util.extend(optMapPanel,{tbar:simpletoolbarItems}):OpenLayers.Util.extend(optMapPanel,{tbar:toolbarItems});
-    mapPanel = new GeoExt.MapPanel(optMapPanel);
-    
-    action = new GeoExt.Action({
+function initTtree(){
+	action = new GeoExt.Action({
         id: "addLayer",
         map: map,
         iconCls:'addLayer',
@@ -968,8 +827,7 @@ function setViewer(){
         iconCls:'baselayeropacity',
         tooltip:"Base layer opacity"
     });
-    
-    function opacity(layer){
+ function opacity(layer){
         var curlayer = layer;
         if (curlayer) {
                 if ((typeof(curlayer.isLoading) == "undefined") ||  // Layers added from WMC
@@ -999,7 +857,6 @@ function setViewer(){
     }
     toctoolbar.push(action);
     toctoolbar.push("-"); 
-   
     //Wms Information window
     //If there is an activeNodes, show its information
     action = new GeoExt.Action({
@@ -1044,107 +901,14 @@ function setViewer(){
     });
     toctoolbar.push(action);
     toctoolbar.push("-");
-   
-    //create the layer node class, using the TreeNodeUIEventMixin
-    var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());   
-    var legendPanel = new GeoExt.LegendPanel({
-        defaults:{
-            labelCls:'mylabel',
-            style:'padding:5px'
-        },
-        title:"legend",
-        autoHeight:true,
-        autoShow:true,
-        autoScroll:true,
-        split:true,
-        collapsible:true,
-        collapsed:false,
-        border:false,
-        map:map,
-        region:'south'
-    });
-    
-    
-    
-    //Extend to add WFS
-//    function addWFSfromURL(wfsurl){
-//    	layerParams = {format:'image/png', transparent:'TRUE'};
-//    	wfsCapurl = wfsurl.replace(/^\s+|\s+$/g, '');
-//    	wfsCapurl += "?service=WMS&request=GetCapabilities";
-//	      var node = new Ext.tree.AsyncTreeNode({
-//	      text: wfsurl,
-//	      loader: new GeoExt.tree.WMSCapabilitiesLoader({
-//	          url: "GetRemoteService?serviceurl="+encodeURIComponent(wfsCapurl)+"&name=wms.xml",
-//	          layerOptions: {buffer: 0, singleTile: true, ratio: 1},
-//	          layerParams: {'TRANSPARENT': 'TRUE',  format: "image/png"},
-//	          // customize the createNode method to add a checkbox to nodes
-//	          createNode: function(attr) {
-//	              attr.checked = attr.leaf ? false : undefined;
-//	              return GeoExt.tree.WMSCapabilitiesLoader.prototype.createNode.apply(this, [attr]);
-//	          }
-//	      }),
-//	      expanded: true
-//	  });
-//	      nodeOverlays_Folder.appendChild(node);
-//	}
-    
-    //Old addWMS Function, It reads all layers to add to the tree.
-//    function addWMSfromURL(wmsurl){
-//    	var wmsCapurl = decodeURIComponent(wmsurl);
-//    	layerParams = {format:'image/png', transparent:'TRUE'};
-//    	if(wmsCapurl.indexOf("?", 0)>-1)
-//    		wmsCapurl = wmsCapurl.substring(0, wmsCapurl.indexOf("?", 0));
-//    	wmsCapurl = wmsCapurl.replace(/^\s+|\s+$/g, '');
-//    	wmsCapurl += "?service=WMS&request=GetCapabilities";
-//    	  
-//	      var node = new Ext.tree.AsyncTreeNode({
-//	      text: wmsurl,
-//	      loader: new GeoExt.tree.WMSCapabilitiesLoader({
-//	          url: "GetRemoteService?serviceurl="+encodeURIComponent(wmsCapurl),
-//	          layerOptions: {buffer: 0, singleTile: true, ratio: 1,  format: "image/png"},
-//	          layerParams: {transparent: 'TRUE',  format: 'image/png'},
-//	          // customize the createNode method to add a checkbox to nodes
-//	          createNode: function(attr) {
-//	              attr.checked = attr.leaf ? false : undefined;
-//	              return GeoExt.tree.WMSCapabilitiesLoader.prototype.createNode.apply(this, [attr]);
-//	          }
-//	      }),
-//	      expanded: true
-//	  });
-//	      nodeOverlays_Folder.appendChild(node);
-//        Ext.Ajax.request({
-//        	url:  "GetRemoteService",
-//            params:{serviceurl:wmsCapurl,name:"temp.xml"},
-//            method: 'GET',
-//            failure: function(response){
-//                var text = response.responseText;
-//                alert(text);
-//                },
-//
-//            success: function(response){
-//
-//                var parser = new OpenLayers.Format.WMSCapabilities();
-//                var caps = parser.read(response.responseXML || response.responseText);
-//                
-//                var srs=caps.capability.layers[0].srs;
-//                for(var name in srs) {
-//                    store.add(new store.recordType({
-//                    	name: name,
-//                    	projection:name
-//                    	}));
-//                }
-//                // return the newly created TreeNode through a callback function
-//                Ext.callback(this.callback, this.scope, [node,caps]);
-//                }
-//        });
-//    };
-
-    tree = new Ext.tree.TreePanel({
+        //create the layer node class, using the TreeNodeUIEventMixin
+    var LayerNodeUI = Ext.extend(GeoExt.tree.LayerNodeUI, new GeoExt.tree.TreeNodeUIEventMixin());
+    var optTree = {
         id:"toctree",
         border:true,
-        region:"north",
-        title:"Layers",
+        region:"center",
         split:true,
+        header:false,
         collapsible:true,
         collapsed:false,
         collapseMode:"mini",
@@ -1186,27 +950,71 @@ function setViewer(){
         },
         rootVisible:false,
         lines:false
-    });
-    
-    var optLeftPanel = {      
-    		border:true,
-	        region:"west",
-	        title:"Workspace",
-	        width:200,
-	        split:true,
-	        collapsible:true,
-	        collapseMode:"mini",
-	        autoScroll:true,
-	        items:[tree,legendPanel]};
-    if(mode === 'advanced')
-    	optLeftPanel = OpenLayers.Util.extend(optLeftPanel, {tbar:toctoolbar});
-    
-    leftPanel = new Ext.Panel(optLeftPanel);
-    
-    viewerport = new Ext.Viewport({
-        layout: "border",
-        items: [ mapPanel,leftPanel]
-    });
-
+    };
+    if(mode == 'advanced')
+       optTree = OpenLayers.Util.extend(optTree,{tbar:toctoolbar});
+    tree = new Ext.tree.TreePanel(optTree);
+    Ext.getCmp('layersPanel').insert(0, tree);
+    Ext.getCmp('layersPanel').doLayout();
 }
-				
+
+function initViewer(){
+   layersPanel = new Ext.Panel({
+   	  id: 'layersPanel',
+      border:true,
+      region:"north",
+      title:"Layers",
+      autoScroll:true
+   });
+   var legendPanel = new Ext.Panel({
+      border:true,
+      region:"south",
+      title:"Legend",
+      autoScroll:true
+   });
+   var optWestPanel = {      
+      border:true,
+      region:"west",
+      header:false,
+      width:200,
+      split:true,
+      collapsible:true,
+      collapseMode:"mini",
+      autoScroll:true,
+      items:[layersPanel,legendPanel]
+   };
+   var westPanel = new Ext.Panel(optWestPanel);
+   var optEastPanel = {
+   	  id:'eastPanel',      
+      border:true,
+      region:"center",
+      header: false,
+      split:true,
+      collapsible:true,
+      collapseMode:"mini",
+      autoScroll:true
+   };
+   optEastPanel = OpenLayers.Util.extend(optEastPanel, mode == 'advanced'?{tbar:toolbarItems}:{tbar:simpletoolbarItems});
+   eastPanel = new Ext.Panel(optEastPanel);
+   loadMask = new Ext.LoadMask(Ext.getBody(), {msg:'Loading map'});
+   loadMask.show(); 
+   viewerport = new Ext.Viewport({
+     layout: "border",
+      items: [ westPanel,eastPanel]
+   });
+};
+
+function loadMapPanel(){
+	mapPanel = new GeoExt.MapPanel({
+        id:"mappanel",
+        border:true,
+        region:"north", 
+        height: eastPanel.getSize().height,
+        zoom:1,
+        map:map,
+        center: [0, 0]});
+    map.zoomToMaxExtent();
+    eastPanel.insert(0, mapPanel);
+    eastPanel.doLayout();
+}
+			
