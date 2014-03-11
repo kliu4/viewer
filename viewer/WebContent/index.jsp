@@ -20,7 +20,7 @@
        <!--  <link rel="stylesheet" type="text/css" href="http://extjs.cachefly.net/ext-3.4.0/examples/shared/examples.css" /> -->
         <link rel="stylesheet" type="text/css" href="css/file-upload.css" />
         <link rel="stylesheet" type="text/css" href="css/viewer.css" />
-        <script type="text/javascript" src="scripts/OpenLayers-2.11/OpenLayers.js"></script>
+        <script type="text/javascript" src="scripts/OpenLayers-2.13/OpenLayers.js"></script>
         <script type="text/javascript" src="scripts/GeoExt/script/GeoExt.js"></script>
         <script type="text/javascript" src="scripts/BaseWindow.js"></script>
         <script type="text/javascript" src="scripts/LoadWmc.js"></script>
