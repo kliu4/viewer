@@ -41,20 +41,20 @@ public class GetRemoteService extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		System.out.println("Do Get Start");
 		String serviceurl = request.getParameterValues("url")[0];
-		serviceurl = URLDecoder.decode(serviceurl);
+		String serviceurlDecoder = URLDecoder.decode(serviceurl);
 		String servicetype = request.getParameterValues("servicetype")[0];
 		if(servicetype.equalsIgnoreCase("WMS")){
-	    	if(serviceurl.indexOf("?", 0)>-1)
-	    		serviceurl = serviceurl.substring(0, serviceurl.indexOf("?", 0));
+	    	if(serviceurlDecoder.indexOf("?", 0)>-1)
+	    		serviceurl = serviceurlDecoder.substring(0, serviceurlDecoder.indexOf("?", 0));
 	    	serviceurl += "?service=WMS&request=GetCapabilities";
 		}
 		else if(servicetype.equalsIgnoreCase("WFS")){
-	    	if(serviceurl.indexOf("?", 0)>-1)
-	    		serviceurl = serviceurl.substring(0, serviceurl.indexOf("?", 0));
+	    	if(serviceurlDecoder.indexOf("?", 0)>-1)
+	    		serviceurl = serviceurlDecoder.substring(0, serviceurlDecoder.indexOf("?", 0));
 	    	serviceurl += "?service=WFS&request=GetCapabilities";
 		}
 		else
-			serviceurl = serviceurl;
+			serviceurl = serviceurl;  //keep serviceurl for some others, e.g, getfeatureinfo
 		System.out.println(serviceurl);
 		URL url = new URL(serviceurl);
 		URLConnection conn = url.openConnection();

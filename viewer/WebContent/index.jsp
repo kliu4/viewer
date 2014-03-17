@@ -10,7 +10,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Data.gov viewer</title>
-        <link rel="stylesheet" href="scripts/OpenLayers-2.11/theme/default/style.css" type="text/css">
+        <link rel="stylesheet" href="scripts/OpenLayers-2.13/theme/default/style.css" type="text/css">
        <!--  <link rel="stylesheet" href="http://openlayers.org/dev/examples/style.css" type="text/css"> -->
         
         <script type="text/javascript" src="scripts/ext-3.4.1.1-gpl/adapter/ext/ext-base.js"></script>
