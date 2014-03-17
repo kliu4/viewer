@@ -378,7 +378,8 @@ OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
 				},
 				success : function(response) {
 					if(response.responseText.indexOf('no results') !== -1){
-					}else{
+					}else if(response.responseText.trim() === ''){}
+					else{
 						var abx = new Ext.Window({
 							width : 400,
 							height : 300,
