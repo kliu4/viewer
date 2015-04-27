@@ -37,7 +37,7 @@ function addWMS2Tree(url){
 	var node = new Ext.tree.AsyncTreeNode({
 	    text: form.getForm().findField('wmsurl').getValue(),
 	    loader: new GeoExt.tree.WMSCapabilitiesLoader({
-	        url: "GetRemoteService?serviceurl="+encodeURIComponent(url)+"&name=wms.xml",
+	        url: "GetRemoteService?url="+encodeURIComponent(url)+"&servicetype=wms",
 	        layerOptions: {buffer: 0, singleTile: true, ratio: 1},
 	        layerParams: {'TRANSPARENT': 'TRUE'},
 	        // customize the createNode method to add a checkbox to nodes
@@ -133,7 +133,7 @@ var addLayerManager = new Ext.Panel({
 			margins : '3 0 3 3',
 			cmargins : '3 3 3 3',
 			layout : 'border',
-			items:[form,treeAddWMS]
+			items:[form]
 		});
 
 var addWmsWindow = new Ext.Window({
@@ -143,6 +143,6 @@ var addWmsWindow = new Ext.Window({
 	title : "Add WMS",
 	plain : true,
 	layout : 'border',
-	items : [addLayerManager]
+	items : [form]
 
 	});

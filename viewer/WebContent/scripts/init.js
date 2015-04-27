@@ -80,7 +80,7 @@ var baselayerlst = [
 					isBaseLayer : true
 				}),
 		new OpenLayers.Layer.WMS("Imagery",
-                "http://54.225.77.204/geoserver/wms", {
+				"http://54.225.77.204/geoserver/wms", {
 					layers : "arctic_sdi:bmng_laea"
 				}, {
 					buffer : 0,
@@ -88,7 +88,7 @@ var baselayerlst = [
 					isBaseLayer : true
 				}) ];
 
-var projlst = [[ "EPSG:3857", "EPSG:900913" ],[ "CRS:84", "EPSG:4326" ],[ "EPSG:3571"] ];
+var projlst = [ [ "EPSG:3857", "EPSG:900913" ], [ "CRS:84", "EPSG:4326" ], [ "EPSG:3571" ] ];
 
 // remove the activeNodes layer from a map
 function removeLayerHandler(node) {
@@ -325,149 +325,160 @@ function addKMZfromURL(kmzurl) {
 	});
 };
 
-OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {                
-    defaultHandlerOptions: {
-        'single': true,
-        'double': false,
-        'pixelTolerance': 0,
-        'stopSingle': false,
-        'stopDouble': false
-    },
+OpenLayers.Control.Click = OpenLayers
+		.Class(
+				OpenLayers.Control,
+				{
+					defaultHandlerOptions : {
+						'single' : true,
+						'double' : false,
+						'pixelTolerance' : 0,
+						'stopSingle' : false,
+						'stopDouble' : false
+					},
 
-    initialize: function(options) {
-        this.handlerOptions = OpenLayers.Util.extend(
-            {}, this.defaultHandlerOptions
-        );
-        OpenLayers.Control.prototype.initialize.apply(
-            this, arguments
-        ); 
-        this.handler = new OpenLayers.Handler.Click(
-            this, {
-                'click': this.trigger
-            }, this.handlerOptions
-        );
-    }, 
+					initialize : function(options) {
+						this.handlerOptions = OpenLayers.Util.extend({},
+								this.defaultHandlerOptions);
+						OpenLayers.Control.prototype.initialize.apply(this,
+								arguments);
+						this.handler = new OpenLayers.Handler.Click(this, {
+							'click' : this.trigger
+						}, this.handlerOptions);
+					},
 
-    trigger: function(e) {
-        var lonlat = map.getLonLatFromPixel(e.xy);
-		if (activeNodes.length >= 1) {
-		var curlayer = activeNodes[0].attributes.layer;
-		if (curlayer && curlayer.CLASS_NAME === "OpenLayers.Layer.WMS") {
-			var url = curlayer.getFullRequestString({
-				REQUEST : "GetFeatureInfo",
-				EXCEPTIONS : "application/vnd.ogc.se_xml",
-				BBOX : map.getExtent().toBBOX(),
-				X : e.xy.x,
-				Y : e.xy.y,
-				INFO_FORMAT : 'text/plain',
-				LAYERS : curlayer.layerid,
-				QUERY_LAYERS : curlayer.layerid,
-				FEATURE_COUNT : 1,
-				WIDTH : map.size.w,
-				HEIGHT : map.size.h
-			}, curlayer.url);
-			Ext.Ajax.request({
-				url : "GetRemoteService",
-				params : {
-					url : url,
-					servicetype : "wmsgetfeatureinfo"
-				},
-				method : 'GET',
-				failure : function(response) {
-					Ext.MessageBox.alert("alert", response.responseText);
-				},
-				success : function(response) {
-					if(response.responseText.indexOf('no results') !== -1){
-					}else if(response.responseText.trim() === ''){}
-					else{
-						var abx = new Ext.Window({
-							width : 400,
-							height : 300,
-							closeAction : 'hide',
-							autoScroll : true,
-							title : "Feature Information",
-							html : setHTML(response),
-							buttons:[{text:'Response Text',
-								handler:function(){
-									var abxText = new Ext.Window({
-										width : 400,
-										height : 300,
-										closeAction : 'hide',
-										autoScroll : true,
-										title : "Feature Information",
-										html : response.responseText});
-									abxText.addClass('x-window-white');
-									abxText.show();
-								}
-								}]
-						});
-						abx.addClass('x-window-white');
-						abx.show();
+					trigger : function(e) {
+						var lonlat = map.getLonLatFromPixel(e.xy);
+						if (activeNodes.length >= 1) {
+							var curlayer = activeNodes[0].attributes.layer;
+							if (curlayer
+									&& curlayer.CLASS_NAME === "OpenLayers.Layer.WMS") {
+								var url = curlayer.getFullRequestString({
+									REQUEST : "GetFeatureInfo",
+									EXCEPTIONS : "application/vnd.ogc.se_xml",
+									BBOX : map.getExtent().toBBOX(),
+									X : e.xy.x,
+									Y : e.xy.y,
+									INFO_FORMAT : 'text/plain',
+									LAYERS : curlayer.layerid,
+									QUERY_LAYERS : curlayer.layerid,
+									FEATURE_COUNT : 1,
+									WIDTH : map.size.w,
+									HEIGHT : map.size.h
+								}, curlayer.url);
+								Ext.Ajax
+										.request({
+											url : "GetRemoteService",
+											params : {
+												url : url,
+												servicetype : "wmsgetfeatureinfo"
+											},
+											method : 'GET',
+											failure : function(response) {
+												Ext.MessageBox.alert("alert",
+														response.responseText);
+											},
+											success : function(response) {
+												if (response.responseText
+														.indexOf('no results') !== -1) {
+												} else if (response.responseText
+														.trim() === '') {
+												} else {
+													var abx = new Ext.Window(
+															{
+																width : 400,
+																height : 300,
+																closeAction : 'hide',
+																autoScroll : true,
+																title : "Feature Information",
+																html : setHTML(response),
+																buttons : [ {
+																	text : 'Response Text',
+																	handler : function() {
+																		var abxText = new Ext.Window(
+																				{
+																					width : 400,
+																					height : 300,
+																					closeAction : 'hide',
+																					autoScroll : true,
+																					title : "Feature Information",
+																					html : response.responseText
+																				});
+																		abxText
+																				.addClass('x-window-white');
+																		abxText
+																				.show();
+																	}
+																} ]
+															});
+													abx
+															.addClass('x-window-white');
+													abx.show();
+												}
+
+											}
+										});
+							} else if (curlayer
+									&& curlayer.CLASS_NAME === "OpenLayers.Layer.Vector") {
+							}
+						}
 					}
-					
-				}
-			});
-		} else if (curlayer
-				&& curlayer.CLASS_NAME === "OpenLayers.Layer.Vector") {
-		}
-	}
-    }
 
-});
+				});
 
 // If we have options, we can initialize the map
 function setmap(options, baselayer) {
 	map = new OpenLayers.Map('map', options);
 	map.addLayer(baselayer);
-//	map.events.register("click", map, function(evt) {
-//		if (activeNodes.length >= 1) {
-//			var curlayer = activeNodes[0].attributes.layer;
-//			if (curlayer && curlayer.CLASS_NAME === "OpenLayers.Layer.WMS") {
-//				var url = curlayer.getFullRequestString({
-//					REQUEST : "GetFeatureInfo",
-//					EXCEPTIONS : "application/vnd.ogc.se_xml",
-//					BBOX : map.getExtent().toBBOX(),
-//					X : evt.xy.x,
-//					Y : evt.xy.y,
-//					INFO_FORMAT : 'text/plain',
-//					LAYERS : curlayer.name,
-//					QUERY_LAYERS : curlayer.name,
-//					FEATURE_COUNT : 1,
-//					WIDTH : map.size.w,
-//					HEIGHT : map.size.h
-//				}, curlayer.url);
-//				Ext.Ajax.request({
-//					url : "GetRemoteService",
-//					params : {
-//						url : url,
-//						servicetype : "wmsgetfeatureinfo"
-//					},
-//					method : 'GET',
-//					failure : function(response) {
-//						Ext.MessageBox.alert("alert", response.responseText);
-//					},
-//					success : function(response) {
-//						var abx = new Ext.Window({
-//							width : 400,
-//							height : 300,
-//							closeAction : 'hide',
-//							autoScroll : true,
-//							title : "Feature Information",
-//							html : setHTML(response)
-//						});
-//						abx.addClass('x-window-white');
-//						abx.show();
-//					}
-//				});
-//			} else if (curlayer
-//					&& curlayer.CLASS_NAME === "OpenLayers.Layer.Vector") {
-//			}
-//		}
-//	});
+	// map.events.register("click", map, function(evt) {
+	// if (activeNodes.length >= 1) {
+	// var curlayer = activeNodes[0].attributes.layer;
+	// if (curlayer && curlayer.CLASS_NAME === "OpenLayers.Layer.WMS") {
+	// var url = curlayer.getFullRequestString({
+	// REQUEST : "GetFeatureInfo",
+	// EXCEPTIONS : "application/vnd.ogc.se_xml",
+	// BBOX : map.getExtent().toBBOX(),
+	// X : evt.xy.x,
+	// Y : evt.xy.y,
+	// INFO_FORMAT : 'text/plain',
+	// LAYERS : curlayer.name,
+	// QUERY_LAYERS : curlayer.name,
+	// FEATURE_COUNT : 1,
+	// WIDTH : map.size.w,
+	// HEIGHT : map.size.h
+	// }, curlayer.url);
+	// Ext.Ajax.request({
+	// url : "GetRemoteService",
+	// params : {
+	// url : url,
+	// servicetype : "wmsgetfeatureinfo"
+	// },
+	// method : 'GET',
+	// failure : function(response) {
+	// Ext.MessageBox.alert("alert", response.responseText);
+	// },
+	// success : function(response) {
+	// var abx = new Ext.Window({
+	// width : 400,
+	// height : 300,
+	// closeAction : 'hide',
+	// autoScroll : true,
+	// title : "Feature Information",
+	// html : setHTML(response)
+	// });
+	// abx.addClass('x-window-white');
+	// abx.show();
+	// }
+	// });
+	// } else if (curlayer
+	// && curlayer.CLASS_NAME === "OpenLayers.Layer.Vector") {
+	// }
+	// }
+	// });
 	var click = new OpenLayers.Control.Click();
-    map.addControl(click);
-    click.activate();
-    
+	map.addControl(click);
+	click.activate();
+
 	map.addControl(new OpenLayers.Control.LayerSwitcher());
 	map.addControl(new OpenLayers.Control.MousePosition());
 };
@@ -568,7 +579,7 @@ function createWMSLayer(layer, url, checked) {
 		dimensions : layer.dimensions,
 		styles : layer.styles,
 		llbbox : layer.llbbox,
-		layerid: layer.name
+		layerid : layer.name
 	}, layerOptions);
 	layeroptions = OpenLayers.Util.extend(layeroptions, checked ? {
 		visibility : true
@@ -600,37 +611,43 @@ function setHTML(response) {
 	if (response.responseText.indexOf('no results') == -1) {
 		var tplstring = '<table class="table table-striped table-bordered table-condensed" data-module="table-toggle-more" ><tbody>';
 		tplstring += '<thead><tr><th >Field</th><th >Value</th></tr></thead><tbody>';
-		//var cat = "Unknown", src = "Unknown", leg = "Unknown", linkinfo = "";
-		
-		try{
-			//To format responseText, many cases
-			//case 1
-			if(response.responseText.indexOf('=') == -1&&response.responseText.indexOf(';') == -1){
+		// var cat = "Unknown", src = "Unknown", leg = "Unknown", linkinfo = "";
+
+		try {
+			// To format responseText, many cases
+			// case 1
+			if (response.responseText.indexOf('=') == -1
+					&& response.responseText.indexOf(';') == -1) {
 				var lines = response.responseText.trim().split('\n');
-				if(lines.length===2){
-					var fields = lines[0].replace(/^\s*/, '').replace(/\s*$/, '')
-					.replace(/ = /, "=").replace(/'/g, '').split('"');
-					var values = lines[1].replace(/^\s*/, '').replace(/\s*$/, '')
-					.replace(/ = /, "=").replace(/'/g, '').split('"');
-					for(var j = 0; j < fields.length; ++j){
+				if (lines.length === 2) {
+					var fields = lines[0].replace(/^\s*/, '').replace(/\s*$/,
+							'').replace(/ = /, "=").replace(/'/g, '')
+							.split('"');
+					var values = lines[1].replace(/^\s*/, '').replace(/\s*$/,
+							'').replace(/ = /, "=").replace(/'/g, '')
+							.split('"');
+					for (var j = 0; j < fields.length; ++j) {
 						var field = fields[j];
-						if(field.trim()===''||field.trim()===""||field.trim()==="''"||field.trim()==='""')
+						if (field.trim() === '' || field.trim() === ""
+								|| field.trim() === "''"
+								|| field.trim() === '""')
 							continue;
 						var value = values[j];
 						tplstring += '<tr class="olFeatureInfoRow">'
-							+ '<td width="30%" class="olFeatureInfoColumn"> <b>'
-							+ field
-							+ '</b></td><td width="70%" class="olFeatureInfoValue">'
-							+ value + '</td></tr>';
+								+ '<td width="30%" class="olFeatureInfoColumn"> <b>'
+								+ field
+								+ '</b></td><td width="70%" class="olFeatureInfoValue">'
+								+ value + '</td></tr>';
 					}
 				}
 			}
-			//case 2: 
-			else{
+			// case 2:
+			else {
 				var lines = response.responseText.split('\n');
 				for (var lcv = 0; lcv < (lines.length); lcv++) {
-					var vals = lines[lcv].replace(/^\s*/, '').replace(/\s*$/, '')
-							.replace(/ = /, "=").replace(/'/g, '').split('=');
+					var vals = lines[lcv].replace(/^\s*/, '').replace(/\s*$/,
+							'').replace(/ = /, "=").replace(/'/g, '')
+							.split('=');
 					if (vals && vals.length == 2)
 						tplstring += '<tr class="olFeatureInfoRow">'
 								+ '<td width="30%" class="olFeatureInfoColumn"> <b>'
@@ -653,16 +670,15 @@ function setHTML(response) {
 					}
 				}
 			}
-			//there may be many other cases
+			// there may be many other cases
 			tplstring += '</tbody></table>';
 			return tplstring;
+		} catch (err) {
+
 		}
-		catch(err){
-			
-		}
-		
-		//case 2: if there is ""
-		
+
+		// case 2: if there is ""
+
 	}
 }
 
@@ -1052,7 +1068,7 @@ function initTtree() {
 	action = new GeoExt.Action({
 		id : "tbRemoveButton",
 		handler : function() {
-			for ( var i =0; i < activeNodes.length; i++) {
+			for (var i = 0; i < activeNodes.length; i++) {
 				removeLayerHandler(activeNodes[i]);
 			}
 			activeNodes = [];

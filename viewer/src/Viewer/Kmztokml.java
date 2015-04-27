@@ -15,13 +15,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Logger;
+
 
 /**
  * Servlet implementation class kmztokml
  */
 public class Kmztokml extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
+	static final Logger LOGGER = Logger.getLogger(Kmztokml.class);
     /**
      * @see HttpServlet#HttpServlet()
      */
@@ -39,7 +41,7 @@ public class Kmztokml extends HttpServlet {
 			String kmzUrl= request.getParameter("url").toString();
 			kmzUrl = URLDecoder.decode(kmzUrl);
 			kmzUrl=kmzUrl.replace("[", "%5B").replace("]", "%5D");
-			System.out.println(kmzUrl);
+			LOGGER.info("convert kmz to kml: " + kmzUrl);
 			String kmlStr = this.kmzToKml(kmzUrl);
 			
 			//System.out.println(kmlStr);
@@ -48,6 +50,7 @@ public class Kmztokml extends HttpServlet {
 			PrintWriter out = response.getWriter();
 			out.write(kmlStr);
 			out.close();
+			LOGGER.debug(kmlStr);
 		}
 	}
 

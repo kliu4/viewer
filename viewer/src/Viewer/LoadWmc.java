@@ -17,6 +17,7 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.log4j.Logger;
 
 import Viewer.WmcCreateServlet.TempFile;
 
@@ -25,7 +26,7 @@ import Viewer.WmcCreateServlet.TempFile;
  */
 public class LoadWmc extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-
+	static final Logger LOGGER = Logger.getLogger(LoadWmc.class);
     protected static final String TEMP_FILE_PREFIX = "Viewer-wmc";
     protected static final String TEMP_FILE_SUFFIX = ".cml";
        
