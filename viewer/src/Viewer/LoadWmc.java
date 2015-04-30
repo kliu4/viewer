@@ -27,54 +27,58 @@ import Viewer.WmcCreateServlet.TempFile;
 public class LoadWmc extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	static final Logger LOGGER = Logger.getLogger(LoadWmc.class);
-    protected static final String TEMP_FILE_PREFIX = "Viewer-wmc";
-    protected static final String TEMP_FILE_SUFFIX = ".cml";
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
-    public LoadWmc() {
-        super();
-        // TODO Auto-generated constructor stub
-    }
+	protected static final String TEMP_FILE_PREFIX = "Viewer-wmc";
+	protected static final String TEMP_FILE_SUFFIX = ".cml";
 
 	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 * @see HttpServlet#HttpServlet()
 	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	public LoadWmc() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
+	 *      response)
+	 */
+	protected void doGet(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 	}
 
 	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
+	 *      response)
 	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
 		// Create a factory for disk-based file items
 		System.out.println("post");
 		FileItemFactory factory = new DiskFileItemFactory();
 		// Create a new file upload handler
-		
-        ServletFileUpload upload = new ServletFileUpload(factory);
-     // Set overall request size constraint
-        final PrintWriter out = response.getWriter();
-        response.setContentType("text/html");
-        response.setHeader("Cache-Control", "no-cache");
 
-        boolean isMultipart = ServletFileUpload.isMultipartContent(request);
+		ServletFileUpload upload = new ServletFileUpload(factory);
+		// Set overall request size constraint
+		final PrintWriter out = response.getWriter();
+		response.setContentType("text/html");
+		response.setHeader("Cache-Control", "no-cache");
 
-        if (!isMultipart) {
-            out.write("{success: false, error: 'Error loading WMC'}");
-            out.flush();
+		boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 
-            return;
-        }
-        
-        ServletContext servletContext = getServletContext();
-  	  	String contextPath = servletContext.getRealPath(File.separator);
-        File dir = new File(contextPath+"/tmp/");
-        System.out.println(dir);
-        // Parse the request
-        List items = null;
+		if (!isMultipart) {
+			out.write("{success: false, error: 'Error loading WMC'}");
+			out.flush();
+
+			return;
+		}
+
+		ServletContext servletContext = getServletContext();
+		String contextPath = servletContext.getRealPath(File.separator);
+		File dir = new File(contextPath + "/tmp/");
+		System.out.println(dir);
+		// Parse the request
+		List items = null;
 		try {
 			items = upload.parseRequest(request);
 		} catch (Exception e) {
@@ -82,34 +86,36 @@ public class LoadWmc extends HttpServlet {
 			e.printStackTrace();
 		}
 		// Process the uploaded items
-        Iterator iter = items.iterator();
+		Iterator iter = items.iterator();
 		while (iter.hasNext()) {
-            FileItem item = (FileItem) iter.next();
+			FileItem item = (FileItem) iter.next();
 
-            if (!item.isFormField()) {
-                byte[] data = item.get();
-                
-                //create a temporary file that will contain the WMC
-                TempFile tempFile = new TempFile(File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX, dir));
-                //final String id = generateId(tempFile);
-                System.out.println(dir);
-                try {
-                    FileWriter fw = new FileWriter(tempFile);
-                    fw.write(new String(data));
-                    fw.close();
-                    
-                    out.write("{success: true, url: 'tmp/"  + tempFile.getName() + "'}");
+			if (!item.isFormField()) {
+				byte[] data = item.get();
 
-                } catch (IOException e) {
-//                    deleteFile(tempFile);
-                    out.write("{success: false, error: '" + e.getMessage() + "'}");
+				// create a temporary file that will contain the WMC
+				TempFile tempFile = new TempFile(File.createTempFile(
+						TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX, dir));
+				// final String id = generateId(tempFile);
+				System.out.println(dir);
+				try {
+					FileWriter fw = new FileWriter(tempFile);
+					fw.write(new String(data));
+					fw.close();
 
-                }
-                
-                
-                break;
-            }
-        }
+					out.write("{success: true, url: 'tmp/" + tempFile.getName()
+							+ "'}");
+
+				} catch (IOException e) {
+					// deleteFile(tempFile);
+					out.write("{success: false, error: '" + e.getMessage()
+							+ "'}");
+
+				}
+
+				break;
+			}
+		}
 	}
 
 }

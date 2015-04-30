@@ -35,22 +35,11 @@ var optionlst = [
 			numZoomLevels : 18,
 			maxExtent : new OpenLayers.Bounds(-20037508.34, -20037508.34,
 					20037508.34, 20037508.34)
-		},
-		{
+		}, {
 			// projection: new OpenLayers.Projection("EPSG:4326"),
 			numZoomLevels : 18,
 			maxExtent : new OpenLayers.Bounds(-180, -90, 180, 90),
 			units : "degrees"
-		},
-		{
-			// projection: new OpenLayers.Projection("EPSG:3571"),
-			units : "m",
-			numZoomLevels : 18,
-			maxResolution : 80092,
-			maxExtent : new OpenLayers.Bounds(-12741629.065420,
-					-12741629.065420, 12741629.065420, 12741629.065420),
-			restrictedExtent : new OpenLayers.Bounds(-12741629.065420,
-					-12741629.065420, 12741629.065420, 12741629.065420)
 		} ];
 
 var baselayerlst = [
@@ -78,17 +67,9 @@ var baselayerlst = [
 					buffer : 0,
 					visibility : true,
 					isBaseLayer : true
-				}),
-		new OpenLayers.Layer.WMS("Imagery",
-				"http://54.225.77.204/geoserver/wms", {
-					layers : "arctic_sdi:bmng_laea"
-				}, {
-					buffer : 0,
-					visibility : true,
-					isBaseLayer : true
 				}) ];
 
-var projlst = [ [ "EPSG:3857", "EPSG:900913" ], [ "CRS:84", "EPSG:4326" ], [ "EPSG:3571" ] ];
+var projlst = [ [ "EPSG:3857", "EPSG:900913" ], [ "CRS:84", "EPSG:4326" ] ];
 
 // remove the activeNodes layer from a map
 function removeLayerHandler(node) {
@@ -188,7 +169,7 @@ function addKMLfromURL(kmlurl) {
 			servicetype : "kml"
 		},
 		method : 'GET',
-		timeout : 20000,
+		timeout : 60000,
 		failure : function(response) {
 			// if it failed, use EPSG:3857
 			Ext.MessageBox.alert("Warning", "Can not load map");
@@ -299,7 +280,7 @@ function addKMZfromURL(kmzurl) {
 			url : encodeURIComponent(decodeURIComponent(kmzurl))
 		},
 		method : 'GET',
-		timeout : 20000,
+		timeout : 60000,
 		failure : function(response) {
 			// if it failed, use EPSG:3857
 			Ext.MessageBox.alert("Warning", "Can not load map");
@@ -800,7 +781,7 @@ Ext
 											servicetype : serviceTypes[i]
 										},
 										method : 'GET',
-										timeout : 20000,
+										timeout : 60000,
 										failure : function(response) {
 											// if it failed, use EPSG:3857
 											Ext.MessageBox.alert("Warning",
