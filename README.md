@@ -12,8 +12,11 @@ URL structure with parameters:
 http://199.26.254.190:8088/viewer?url=service1,service2,....&servicetype=service1Type,service2Type,...&srs=supportedProjection
 
 Parameters:
+
 •	url: [required] one service url, or a list of service urls separated by comma. 
+
 •	servicetype: [required]  the service type(s) for the service(s) provided in the url parameter. Currently supported service types: WMS, KML, KMZ
+
 •	srs: [optional]: WMS service projection, e.g EPSG:3572, EPSG: 4326 etc. 
 
 Two modes are supported: simple and advanced. The default mode is simple mode
