@@ -1,4 +1,4 @@
-package Viewer;
+package viewer;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -19,7 +19,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
-import Viewer.WmcCreateServlet.TempFile;
+import viewer.WmcCreateServlet.TempFile;
 
 /**
  * Servlet implementation class LoadWmc

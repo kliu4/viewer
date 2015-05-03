@@ -1,4 +1,4 @@
-package Viewer;
+package viewer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

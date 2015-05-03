@@ -1,4 +1,4 @@
-package Viewer;
+package viewer;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

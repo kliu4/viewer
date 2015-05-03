@@ -772,13 +772,14 @@ Ext
 								}
 							}
 							addLayerFromGetMap(wmsgetmapuri);
-						} else {
+						} 
+						else {
 							Ext.Ajax
 									.request({
-										url : "GetRemoteService",
+										url : "rest/dispatcher",
 										params : {
-											url : encodeURIComponent(decodeURIComponent(urls[i])),
-											servicetype : serviceTypes[i]
+											serviceUrl : encodeURIComponent(decodeURIComponent(urls[i])),
+											serviceType : serviceTypes[i]
 										},
 										method : 'GET',
 										timeout : 60000,
@@ -884,7 +885,119 @@ Ext
 										}
 									})
 						}
-
+						
+//						else {
+//							Ext.Ajax
+//									.request({
+//										url : "GetRemoteService",
+//										params : {
+//											url : encodeURIComponent(decodeURIComponent(urls[i])),
+//											servicetype : serviceTypes[i]
+//										},
+//										method : 'GET',
+//										timeout : 60000,
+//										failure : function(response) {
+//											// if it failed, use EPSG:3857
+//											Ext.MessageBox.alert("Warning",
+//													"Can not load map");
+//											options = OpenLayers.Util.extend({
+//												projection : "EPSG:3857"
+//											}, optionlst[0]);
+//											baselayer = baselayerlst[0];
+//											if (typeof map === 'undefined'
+//													&& typeof options !== 'undefined') {
+//												setmap(options, baselayer);
+//												loadMask.hide();
+//												loadMapPanel();
+//											}
+//										},
+//										success : function(response) {
+//											var parser = new OpenLayers.Format.WMSCapabilities();
+//											var caps = parser
+//													.read(response.responseXML
+//															|| response.responseText);
+//											if (typeof caps.capability === 'undefined') {
+//												Ext.MessageBox.alert("Warning",
+//														"Can not load map");
+//												if (typeof map === 'undefined'
+//														&& typeof options === 'undefined') {
+//													var i = getProjIndex(selectedProj);
+//													options = OpenLayers.Util
+//															.extend(
+//																	{
+//																		projection : selectedProj
+//																	},
+//																	optionlst[0]);
+//													baselayer = baselayerlst[0];
+//													setmap(options, baselayer);
+//													loadMask.hide();
+//													loadMapPanel();
+//												}
+//												if (typeof ltree === 'undefined')
+//													initTtree();
+//												return;
+//											}
+//
+//											var srs = caps.capability.layers[0].srs;
+//											for ( var name in srs) {
+//												proj_all_services.push(name);
+//											}
+//											proj_all_services = proj_all_services
+//													.filter(function(elem, pos) {
+//														return proj_all_services
+//																.indexOf(elem) == pos;
+//													});
+//
+//											// the default selected Proj is 3857
+//											var selectedProj;
+//											for (var i = 0, len = proj_all_services.length; i < len; i++) {
+//
+//												if (proj_all_services[i]
+//														.toUpperCase() === "EPSG:3857"
+//														|| proj_all_services[i]
+//																.toUpperCase() === "EPSG:90013") {
+//													selectedProj = proj_all_services[i]
+//															.toUpperCase();
+//													break;
+//												}
+//											}
+//											if (typeof selectedProj === 'undefined') {
+//												for (var i = 0, len = proj_all_services.length; i < len; i++) {
+//													if (proj_all_services[i]
+//															.toUpperCase() === "CRS:84"
+//															|| proj_all_services[i]
+//																	.toUpperCase() === "EPSG:4326") {
+//														selectedProj = "EPSG:4326";
+//														break;
+//													}
+//												}
+//											}
+//											if (typeof selectedProj === 'undefined') {
+//												selectedProj = "EPSG:3857";
+//											}
+//											// 3) if options still be undefined,
+//											// we should use the proj from wms
+//											if (typeof map === 'undefined'
+//													&& typeof options === 'undefined') {
+//												var i = getProjIndex(selectedProj);
+//												options = OpenLayers.Util
+//														.extend(
+//																{
+//																	projection : selectedProj
+//																}, optionlst[i]);
+//												baselayer = baselayerlst[i];
+//												setmap(options, baselayer);
+//												loadMask.hide();
+//												loadMapPanel();
+//											}
+//
+//											wmslst.push(caps);
+//											addwms(caps);
+//											if (typeof ltree === 'undefined')
+//												initTtree();
+//										}
+//									})
+//						}
 					} else if (tmptype === "KML") {
 						addKMLfromURL(urls[i]);
 						if (typeof ltree === 'undefined')
