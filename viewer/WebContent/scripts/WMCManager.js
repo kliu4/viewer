@@ -106,7 +106,7 @@ Viewer.WMC = function() {
             OpenLayers.Request.POST({
                 // TODO: there were problems with relative 
                 // urls, should we change this?
-                url:  "WmcCreateServlet",
+                url:  "wmc/create.wmc",
                 data: wmc.write(map),
                 success: this.onSaveContextSuccess,
                 failure: this.onSaveContextFailure

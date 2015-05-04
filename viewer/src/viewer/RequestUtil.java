@@ -4,10 +4,6 @@
  */
 package viewer;
 
-/**
- *
- * @author kai
- */
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;

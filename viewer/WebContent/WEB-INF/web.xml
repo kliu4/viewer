@@ -4,13 +4,18 @@
           http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
     version="3.0">
 	<display-name>viewer</display-name>
-	<!-- <servlet>
+	<servlet>
 		<description>
 		</description>
-		<display-name>WmcCreateServlet</display-name>
-		<servlet-name>WmcCreateServlet</servlet-name>
-		<servlet-class>Viewer.WmcCreateServlet</servlet-class>
+		<display-name>WmcServlet</display-name>
+		<servlet-name>WmcServlet</servlet-name>
+		<servlet-class>viewer.WmcServlet</servlet-class>
 	</servlet>
+		<servlet-mapping>
+		<servlet-name>WmcServlet</servlet-name>
+		<url-pattern>/wmc/*</url-pattern>
+	</servlet-mapping>
+	<!-- 
 	<servlet>
 		<description>
 		</description>
@@ -32,10 +37,7 @@
 		<servlet-name>Kmztokml</servlet-name>
 		<servlet-class>Viewer.Kmztokml</servlet-class>
 	</servlet>
-	<servlet-mapping>
-		<servlet-name>WmcCreateServlet</servlet-name>
-		<url-pattern>/WmcCreateServlet</url-pattern>
-	</servlet-mapping>
+
 	<servlet-mapping>
 		<servlet-name>LoadWmc</servlet-name>
 		<url-pattern>/LoadWmc</url-pattern>

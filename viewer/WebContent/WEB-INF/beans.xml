@@ -14,5 +14,4 @@
 	</jaxrs:server>
 
 	<bean id="dispatcherBean" class="viewer.service.Dispatcher" />
-
 </beans>

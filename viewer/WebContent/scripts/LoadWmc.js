@@ -97,7 +97,7 @@ Ext.extend(Viewer.LoadWmcWindow, Viewer.BaseWindow, {
                 handler: function() {
                     if (fp.getForm().isValid()) {
                         fp.getForm().submit({
-                            url: 'LoadWmc',
+                            url: 'wmc/load.wmc',
                             success: this.onSuccessLoad,
                             failure: this.onFailure,
                             scope: this
@@ -110,7 +110,7 @@ Ext.extend(Viewer.LoadWmcWindow, Viewer.BaseWindow, {
                 handler: function() {
                    if (fp.getForm().isValid()) {
                         fp.getForm().submit({
-                            url: 'LoadWmc',
+                            url: 'wmc/load.wmc',
                             success: this.onSuccessMerge,
                             failure: this.onFailure,
                             scope: this
@@ -130,7 +130,8 @@ Ext.extend(Viewer.LoadWmcWindow, Viewer.BaseWindow, {
         var o = Ext.decode(json);
         if (o.success) {
             var cb = OpenLayers.Function.bind(this.parseWMCLoad, this);
-            OpenLayers.loadURL(o.url, null, null, cb);
+            //OpenLayers.loadURL(o.url, null, null, cb);
+            OpenLayers.Request.GET({url:o.url,callback:cb});
         } else {
             this.onAjaxFailure();
         }
