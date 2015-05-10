@@ -95,6 +95,7 @@ function removeLayerHandler(node) {
 }
 
 function zoomlayer(layer) {
+	loadMask.hide();
 	var curlayer = layer;
 	if (curlayer) {
 		if (curlayer.llbbox) {
@@ -585,7 +586,7 @@ Ext
 				if (typeof map === 'undefined'
 						&& typeof options !== 'undefined') {
 					setmap(options, baselayer);
-					loadMask.hide();
+					//loadMask.hide();
 					loadMapPanel();
 				}
 

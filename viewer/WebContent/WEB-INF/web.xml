@@ -15,17 +15,7 @@
 		<servlet-name>WmcServlet</servlet-name>
 		<url-pattern>/wmc/*</url-pattern>
 	</servlet-mapping>
-		<servlet>
-		<description>
-		</description>
-		<display-name>Kmztokml</display-name>
-		<servlet-name>Kmztokml</servlet-name>
-		<servlet-class>Viewer.Kmztokml</servlet-class>
-	</servlet>
-		<servlet-mapping>
-		<servlet-name>Kmztokml</servlet-name>
-		<url-pattern>/Kmztokml</url-pattern>
-	</servlet-mapping>
+		
 	<!-- 
 	<servlet>
 		<description>

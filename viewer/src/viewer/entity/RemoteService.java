@@ -1,9 +1,11 @@
-package entity;
+package viewer.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+//save the id and url in the database
+//xml contents of remote service may be big, save the contents in the file system
 @Entity
 public class RemoteService {
 	
@@ -21,14 +23,6 @@ public class RemoteService {
 
 	public void setUrl(String url) {
 		this.url = url;
-	}
-
-	public String getContent() {
-		return content;
-	}
-
-	public void setContent(String content) {
-		this.content = content;
 	}
 
 	public Integer getId() {
