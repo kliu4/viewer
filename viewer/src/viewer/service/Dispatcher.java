@@ -2,10 +2,12 @@ package viewer.service;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URLDecoder;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -14,6 +16,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -25,12 +28,19 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import viewer.entity.RemoteService;
+import viewer.repository.RemoteServiceRepository;
 
 @Path("/")
 @Produces("application/xml;charset=UTF-8")
 public class Dispatcher {
 	static final Logger LOGGER = Logger.getLogger(Dispatcher.class);
-
+	
+	@Autowired
+	private RemoteServiceRepository remoteServiceRepository;
+	
 	@GET
 	public String getRequest(@QueryParam("serviceType") String serviceType,
 			@QueryParam("serviceUrl") String serviceUrl) throws IOException {
@@ -39,6 +49,21 @@ public class Dispatcher {
 		// return encoded;
 
 		String remoteUrl = formatUrl(serviceUrl, serviceType);
+		
+		List<RemoteService> services = remoteServiceRepository.findFirst1ByUrlOrderByCreatedAtAsc(remoteUrl);
+		System.out.println(services.size());
+		for(RemoteService service:services){
+			System.out.println(service.getId());
+			System.out.println(service.getUrl());
+			System.out.println(service.getCreatedAt());
+		}
+		
+		if(services.size()==1){
+			 String encoded = FileUtils.readFileToString(new
+			 File("/Users/kailiu/Downloads/coawst.xml"));
+			 return encoded;
+		}
+		
 		if(serviceType==null)
 			return "";
 		else if ("KMZ".equalsIgnoreCase(serviceType))
@@ -49,7 +74,7 @@ public class Dispatcher {
 	}
 
 	public String getContents(String remoteUrl) {
-
+		Long startTime = System.currentTimeMillis();
 		HttpClient httpClient = new DefaultHttpClient();
 		String result = "";
 		try {
@@ -94,11 +119,17 @@ public class Dispatcher {
 
 		// some kml is kmz,
 		// some unzipped kmz is still kmz
-
+		Long endTime = System.currentTimeMillis();
+		System.out.println(startTime);
+		System.out.println(endTime);
+		
+		if(endTime - startTime > 10000)
+			System.out.println(endTime-startTime);
 		return result;
 	}
 
 	public String getKmzContents(String kmzUrl) {
+		Long startTime = System.currentTimeMillis();
 		HttpClient httpClient = new DefaultHttpClient();
 		String result = "";
 		try {
@@ -151,7 +182,16 @@ public class Dispatcher {
 		// some unzipped kmz is still kmz
 
 		try {
-			return getRecursionContents(result);
+			
+			result = getRecursionContents(result);
+			Long endTime = System.currentTimeMillis();
+			System.out.println(startTime);
+			System.out.println(endTime);
+			
+			if(endTime - startTime > 10000)
+				System.out.println(endTime-startTime);
+			return result;
+			
 		} catch (JDOMException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

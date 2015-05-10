@@ -15,7 +15,9 @@
 		<servlet-name>WmcServlet</servlet-name>
 		<url-pattern>/wmc/*</url-pattern>
 	</servlet-mapping>
-		
+	<listener>
+    <listener-class>viewer.WebAppPropertiesListener</listener-class>
+</listener>
 	<!-- 
 	<servlet>
 		<description>

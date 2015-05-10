@@ -1,21 +1,28 @@
 package viewer.entity;
 
+import java.util.Date;
+import java.util.UUID;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+
+import org.hibernate.annotations.GenericGenerator;
+
 
 //save the id and url in the database
 //xml contents of remote service may be big, save the contents in the file system
 @Entity
 public class RemoteService {
 	
-	@Id
-	@GeneratedValue
-	private Integer id;
+	@Id 
+	@GeneratedValue(generator="uuid")
+	@GenericGenerator(name="uuid", strategy = "uuid2")
+	private String id;
 
 	private String url;
 	
-	private String content;
+	private Date createdAt;
 	
 	public String getUrl() {
 		return url;
@@ -25,12 +32,20 @@ public class RemoteService {
 		this.url = url;
 	}
 
-	public Integer getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(String id) {
 		this.id = id;
+	}
+
+	public Date getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(Date createdAt) {
+		this.createdAt = createdAt;
 	}
 	
 }
