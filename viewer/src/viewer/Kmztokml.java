@@ -69,7 +69,6 @@ public class Kmztokml extends HttpServlet {
 		String kmlDoc = "";
 
 		try {
-
 			URL url = new URL(kmzUrl);
 			HttpURLConnection http = (HttpURLConnection) url.openConnection();
 			InputStream fin = http.getInputStream();
@@ -105,7 +104,8 @@ public class Kmztokml extends HttpServlet {
 		// TODO: transform
 		return kmlDoc;
 	}
-
+	
+	//https://sites.google.com/site/geined13/tours/080505-__USGS_Real-time_Earthquakes_%5B73112%5D.kmz?attredirects=0&d=1
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Kmztokml toKml = new Kmztokml();

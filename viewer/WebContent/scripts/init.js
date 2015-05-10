@@ -20,13 +20,6 @@ var viewerport;
 var lurl = document.URL;
 var wmclayers = [];
 var toolbarItems = [], action, actions = [], toctoolbar = [];
-// simple array store of projection
-// var store = new Ext.data.ArrayStore({
-// fields: ['name', 'projection'],
-// data : [
-// ],
-// autoLoad:false
-// });
 
 var optionlst = [
 		{
@@ -108,21 +101,11 @@ function zoomlayer(layer) {
 			// store info as wgs84
 			var mapProj = map.getProjectionObject();
 			var wgs84 = new OpenLayers.Projection("EPSG:4326");
-			var llbbox = curlayer.llbbox;
-			var minMapxy = new OpenLayers.LonLat(llbbox[0], llbbox[1])
-					.transform(wgs84, mapProj);
-			var maxMapxy = new OpenLayers.LonLat(llbbox[2], llbbox[3])
-					.transform(wgs84, mapProj);
-			// -20037508, -20037508,20037508, 20037508
-			var extent = new OpenLayers.Bounds();
-			extent.left = minMapxy.lon;
-			extent.right = maxMapxy.lon;
-			extent.top = maxMapxy.lat;
-			extent.bottom = minMapxy.lat;
-
+			var extent = new OpenLayers.Bounds(curlayer.llbbox);
+			if (mapProj.projCode !== wgs84.projCode) {
+				extent.transform(wgs84, map.getProjectionObject());
+			}
 			map.zoomToExtent(extent);
-
-			// If layer has no boundingbox info, use full extent
 		} else {
 			map.zoomToMaxExtent();
 		}
@@ -130,12 +113,15 @@ function zoomlayer(layer) {
 		Ext.MessageBox.alert("NoSelectedLayer", "Please select layer to zoom");
 	}
 }
-function addKMLfromDirectURL(kmlurl) {
+
+// add kml or kmz to map
+function addKmx(url, kmxType) {
 	var kmlLayer = new OpenLayers.Layer.Vector("KML", {
 		projection : new OpenLayers.Projection("EPSG:4326"),
 		strategies : [ new OpenLayers.Strategy.Fixed() ],
 		protocol : new OpenLayers.Protocol.HTTP({
-			url : "GetRemoteService?url=" + kmlurl + "&servicetype=kml",
+			url : "rest/dispatcher?serviceUrl=" + url + "&serviceType="
+					+ kmxType,
 			format : new OpenLayers.Format.KML({
 				extractStyles : true,
 				extractAttributes : true,
@@ -161,39 +147,6 @@ function addKMLfromDirectURL(kmlurl) {
 	root.appendChild(node);
 	activeNodes.push(node);
 }
-function addKMLfromURL(kmlurl) {
-	Ext.Ajax.request({
-		url : "GetRemoteService",
-		params : {
-			url : encodeURIComponent(decodeURIComponent(kmlurl)),
-			servicetype : "kml"
-		},
-		method : 'GET',
-		timeout : 60000,
-		failure : function(response) {
-			// if it failed, use EPSG:3857
-			Ext.MessageBox.alert("Warning", "Can not load map");
-		},
-		success : function(response) {
-			var href = response.responseXML.getElementsByTagName('href');
-			if (typeof href === 'undefined' || typeof href[0] === 'undefined') {
-				addKMLfromDirectURL(kmlurl);
-			} else {
-				var href = href[0].textContent;
-				if (href.length < 4)
-					return;
-				else if (href.substring(href.length - 3, href.length)
-						.toUpperCase() == 'KML')
-					addKMLfromURL(href);
-				else if (href.substring(href.length - 3, href.length)
-						.toUpperCase() == 'KMZ')
-					addKMZfromURL(href);
-				else
-					addKMLfromDirectURL(kmlurl);
-			}
-		}
-	});
-};
 
 function onPopupClose(evt) {
 	select.unselectAll();
@@ -224,42 +177,11 @@ function onFeatureUnselect(event) {
 		delete feature.popup;
 	}
 }
-function addKMZfromDirectURL(kmzurl) {
-	var kmzLayer = new OpenLayers.Layer.Vector("KML", {
-		projection : new OpenLayers.Projection("EPSG:4326"),
-		strategies : [ new OpenLayers.Strategy.Fixed() ],
-		protocol : new OpenLayers.Protocol.HTTP({
-			url : "Kmztokml?url=" + kmzurl,
-			format : new OpenLayers.Format.KML({
-				extractStyles : true,
-				extractAttributes : true,
-				maxDepth : 4
-			})
-		})
-	});
-	map.addLayer(kmzLayer);
-	select = new OpenLayers.Control.SelectFeature(kmzLayer);
-	kmzLayer.events.on({
-		"featureselected" : onFeatureSelect,
-		"featureunselected" : onFeatureUnselect
-	});
-	map.addControl(select);
-	select.activate();
-	var kmzname = decodeURIComponent(kmzurl);
-	var node = new Ext.tree.TreeNode({
-		layer : kmzLayer,
-		text : kmzname,
-		checked : true,
-		leaf : true
-	});
-	root.appendChild(node);
-	activeNodes.push(node);
-}
 
 function addGEORSSfromURL(rssurl) {
-	var localUrl = "GetRemoteService?url="
+	var localUrl = "rest/dispatcher?serviceUrl="
 			+ encodeURIComponent(decodeURIComponent(rssurl))
-			+ "&servicetype=GEORSS";
+			+ "&serviceType=GEORSS";
 	var parts = rssurl.split("/");
 	var newl = new OpenLayers.Layer.GeoRSS(parts[parts.length - 1], localUrl);
 	map.addLayer(newl);
@@ -271,39 +193,6 @@ function addGEORSSfromURL(rssurl) {
 	});
 	root.appendChild(node);
 	activeNodes.push(node);
-};
-
-function addKMZfromURL(kmzurl) {
-	Ext.Ajax.request({
-		url : "Kmztokml",
-		params : {
-			url : encodeURIComponent(decodeURIComponent(kmzurl))
-		},
-		method : 'GET',
-		timeout : 60000,
-		failure : function(response) {
-			// if it failed, use EPSG:3857
-			Ext.MessageBox.alert("Warning", "Can not load map");
-		},
-		success : function(response) {
-			var href = response.responseXML.getElementsByTagName('href');
-			if (typeof href === 'undefined' || typeof href[0] === 'undefined') {
-				addKMZfromDirectURL(kmzurl);
-			} else {
-				var href = href[0].textContent;
-				if (href.length < 4)
-					return;
-				else if (href.substring(href.length - 3, href.length)
-						.toUpperCase() == 'KML')
-					addKMLfromURL(href);
-				else if (href.substring(href.length - 3, href.length)
-						.toUpperCase() == 'KMZ')
-					addKMZfromURL(href);
-				else
-					addKMZfromDirectURL(kmzurl);
-			}
-		}
-	});
 };
 
 OpenLayers.Control.Click = OpenLayers
@@ -349,15 +238,15 @@ OpenLayers.Control.Click = OpenLayers
 								}, curlayer.url);
 								Ext.Ajax
 										.request({
-											url : "GetRemoteService",
+											url : "rest/dispatcher",
 											params : {
-												url : url,
-												servicetype : "wmsgetfeatureinfo"
+												serviceUrl : url,
+												serviceType : "wmsgetfeatureinfo"
 											},
 											method : 'GET',
 											failure : function(response) {
-												Ext.MessageBox.alert("alert",
-														response.responseText);
+												// Ext.MessageBox.alert("alert",
+												// response.responseText);
 											},
 											success : function(response) {
 												if (response.responseText
@@ -411,51 +300,7 @@ OpenLayers.Control.Click = OpenLayers
 function setmap(options, baselayer) {
 	map = new OpenLayers.Map('map', options);
 	map.addLayer(baselayer);
-	// map.events.register("click", map, function(evt) {
-	// if (activeNodes.length >= 1) {
-	// var curlayer = activeNodes[0].attributes.layer;
-	// if (curlayer && curlayer.CLASS_NAME === "OpenLayers.Layer.WMS") {
-	// var url = curlayer.getFullRequestString({
-	// REQUEST : "GetFeatureInfo",
-	// EXCEPTIONS : "application/vnd.ogc.se_xml",
-	// BBOX : map.getExtent().toBBOX(),
-	// X : evt.xy.x,
-	// Y : evt.xy.y,
-	// INFO_FORMAT : 'text/plain',
-	// LAYERS : curlayer.name,
-	// QUERY_LAYERS : curlayer.name,
-	// FEATURE_COUNT : 1,
-	// WIDTH : map.size.w,
-	// HEIGHT : map.size.h
-	// }, curlayer.url);
-	// Ext.Ajax.request({
-	// url : "GetRemoteService",
-	// params : {
-	// url : url,
-	// servicetype : "wmsgetfeatureinfo"
-	// },
-	// method : 'GET',
-	// failure : function(response) {
-	// Ext.MessageBox.alert("alert", response.responseText);
-	// },
-	// success : function(response) {
-	// var abx = new Ext.Window({
-	// width : 400,
-	// height : 300,
-	// closeAction : 'hide',
-	// autoScroll : true,
-	// title : "Feature Information",
-	// html : setHTML(response)
-	// });
-	// abx.addClass('x-window-white');
-	// abx.show();
-	// }
-	// });
-	// } else if (curlayer
-	// && curlayer.CLASS_NAME === "OpenLayers.Layer.Vector") {
-	// }
-	// }
-	// });
+	
 	var click = new OpenLayers.Control.Click();
 	map.addControl(click);
 	click.activate();
@@ -480,7 +325,7 @@ function getProjIndex(proj) {
 };
 
 // add layer from getmap request
-function addLayerFromGetMap(turi) {
+function addLayerFromGetMap(turi, llbbox) {
 	var layers = turi.getQueryParamValue('LAYERS');
 	if (typeof layers === 'undefined')
 		return;
@@ -488,13 +333,14 @@ function addLayerFromGetMap(turi) {
 		var wms = new OpenLayers.Layer.WMS(layers,
 				turi.toString().split('?')[0], {
 					layers : layers,
-					format : 'image/png',
 					transparent : 'TRUE'
 				}, {
 					ratio : 1,
-					visibility : true
+					visibility : true,
+					llbbox : llbbox
 				});
 		map.addLayer(wms);
+		zoomlayer(wms);
 	}
 };
 
@@ -658,8 +504,6 @@ function setHTML(response) {
 
 		}
 
-		// case 2: if there is ""
-
 	}
 }
 
@@ -723,22 +567,21 @@ Ext
 				}
 
 				var initProj = uri.getQueryParamValue('srs');
+				var indexOfProj = 0;
+				var mapProj = 'EPSG:3857';
 				if (typeof initProj !== 'undefined') {
 					var i = getProjIndex(initProj);
-					options = OpenLayers.Util.extend({
-						projection : initProj
-					}, optionlst[i]);
-					baselayer = baselayerlst[i];
+					if (typeof i !== 'undefined') {
+						indexOfProj = i;
+						mapProj = initProj;
+					}
+
 				}
-				// 2) if there is kml or kmz in the URL,
-				if (serviceTypes.indexOf("KML") >= 0
-						|| serviceTypes.indexOf("KMZ") >= 0
-						|| serviceTypes.indexOf("GEORSS") >= 0) {
-					options = OpenLayers.Util.extend({
-						EPSG : 3857
-					}, optionlst[0]);
-					baselayer = baselayerlst[0];
-				}
+				options = OpenLayers.Util.extend({
+					projection : mapProj
+				}, optionlst[indexOfProj]);
+				baselayer = baselayerlst[indexOfProj];
+				
 				if (typeof map === 'undefined'
 						&& typeof options !== 'undefined') {
 					setmap(options, baselayer);
@@ -748,32 +591,20 @@ Ext
 
 				// Check the projection list from WMS
 				for (var i = 0, len = urls.length; i < len; i++) {
-					var tmptype = serviceTypes[i].toUpperCase();
-					if (tmptype === 'WMS') {
-						var wmsgetmapuri = new Uri(decodeURIComponent(urls[i]));
-						var request = wmsgetmapuri
+					var tmpType = serviceTypes[i].toUpperCase();
+					if (tmpType === 'WMS') {
+						var wmsUri = new Uri(decodeURIComponent(urls[i]));
+						var request = wmsUri
 								.getQueryParamValue('request');
-						projfromGetMap = wmsgetmapuri.getQueryParamValue('CRS');
 						if (typeof request !== 'undefined'
 								&& request.toUpperCase() === 'GETMAP') {
-							if (typeof options === 'undefined') {
-								// GetMapRequest always have SRS
-								var projFromGetMap = wmsgetmapuri
+								var projFromGetMap = wmsUri
 										.getQueryParamValue('srs')
 										.toUpperCase();
-								var i = getProjIndex(initProj);
-								options = OpenLayers.Util.extend({
-									projection : initProj
-								}, optionlst[i]);
-								baselayer = baselayerlst[i];
-								if (typeof map === 'undefined'
-										&& typeof options !== 'undefined') {
-									setmap(options, baselayer);
-								}
-							}
-							addLayerFromGetMap(wmsgetmapuri);
-						} 
-						else {
+								var llbbox = wmsUri
+										.getQueryParamValue('BBox').split(',');
+							addLayerFromGetMap(wmsUri, llbbox);
+						} else {
 							Ext.Ajax
 									.request({
 										url : "rest/dispatcher",
@@ -787,16 +618,6 @@ Ext
 											// if it failed, use EPSG:3857
 											Ext.MessageBox.alert("Warning",
 													"Can not load map");
-											options = OpenLayers.Util.extend({
-												projection : "EPSG:3857"
-											}, optionlst[0]);
-											baselayer = baselayerlst[0];
-											if (typeof map === 'undefined'
-													&& typeof options !== 'undefined') {
-												setmap(options, baselayer);
-												loadMask.hide();
-												loadMapPanel();
-											}
 										},
 										success : function(response) {
 											var parser = new OpenLayers.Format.WMSCapabilities();
@@ -806,76 +627,9 @@ Ext
 											if (typeof caps.capability === 'undefined') {
 												Ext.MessageBox.alert("Warning",
 														"Can not load map");
-												if (typeof map === 'undefined'
-														&& typeof options === 'undefined') {
-													var i = getProjIndex(selectedProj);
-													options = OpenLayers.Util
-															.extend(
-																	{
-																		projection : selectedProj
-																	},
-																	optionlst[0]);
-													baselayer = baselayerlst[0];
-													setmap(options, baselayer);
-													loadMask.hide();
-													loadMapPanel();
-												}
 												if (typeof ltree === 'undefined')
 													initTtree();
 												return;
-											}
-
-											var srs = caps.capability.layers[0].srs;
-											for ( var name in srs) {
-												proj_all_services.push(name);
-											}
-											proj_all_services = proj_all_services
-													.filter(function(elem, pos) {
-														return proj_all_services
-																.indexOf(elem) == pos;
-													});
-
-											// the default selected Proj is 3857
-											var selectedProj;
-											for (var i = 0, len = proj_all_services.length; i < len; i++) {
-
-												if (proj_all_services[i]
-														.toUpperCase() === "EPSG:3857"
-														|| proj_all_services[i]
-																.toUpperCase() === "EPSG:90013") {
-													selectedProj = proj_all_services[i]
-															.toUpperCase();
-													break;
-												}
-											}
-											if (typeof selectedProj === 'undefined') {
-												for (var i = 0, len = proj_all_services.length; i < len; i++) {
-													if (proj_all_services[i]
-															.toUpperCase() === "CRS:84"
-															|| proj_all_services[i]
-																	.toUpperCase() === "EPSG:4326") {
-														selectedProj = "EPSG:4326";
-														break;
-													}
-												}
-											}
-											if (typeof selectedProj === 'undefined') {
-												selectedProj = "EPSG:3857";
-											}
-											// 3) if options still be undefined,
-											// we should use the proj from wms
-											if (typeof map === 'undefined'
-													&& typeof options === 'undefined') {
-												var i = getProjIndex(selectedProj);
-												options = OpenLayers.Util
-														.extend(
-																{
-																	projection : selectedProj
-																}, optionlst[i]);
-												baselayer = baselayerlst[i];
-												setmap(options, baselayer);
-												loadMask.hide();
-												loadMapPanel();
 											}
 
 											wmslst.push(caps);
@@ -885,128 +639,11 @@ Ext
 										}
 									})
 						}
-						
-//						else {
-//							Ext.Ajax
-//									.request({
-//										url : "GetRemoteService",
-//										params : {
-//											url : encodeURIComponent(decodeURIComponent(urls[i])),
-//											servicetype : serviceTypes[i]
-//										},
-//										method : 'GET',
-//										timeout : 60000,
-//										failure : function(response) {
-//											// if it failed, use EPSG:3857
-//											Ext.MessageBox.alert("Warning",
-//													"Can not load map");
-//											options = OpenLayers.Util.extend({
-//												projection : "EPSG:3857"
-//											}, optionlst[0]);
-//											baselayer = baselayerlst[0];
-//											if (typeof map === 'undefined'
-//													&& typeof options !== 'undefined') {
-//												setmap(options, baselayer);
-//												loadMask.hide();
-//												loadMapPanel();
-//											}
-//										},
-//										success : function(response) {
-//											var parser = new OpenLayers.Format.WMSCapabilities();
-//											var caps = parser
-//													.read(response.responseXML
-//															|| response.responseText);
-//											if (typeof caps.capability === 'undefined') {
-//												Ext.MessageBox.alert("Warning",
-//														"Can not load map");
-//												if (typeof map === 'undefined'
-//														&& typeof options === 'undefined') {
-//													var i = getProjIndex(selectedProj);
-//													options = OpenLayers.Util
-//															.extend(
-//																	{
-//																		projection : selectedProj
-//																	},
-//																	optionlst[0]);
-//													baselayer = baselayerlst[0];
-//													setmap(options, baselayer);
-//													loadMask.hide();
-//													loadMapPanel();
-//												}
-//												if (typeof ltree === 'undefined')
-//													initTtree();
-//												return;
-//											}
-//
-//											var srs = caps.capability.layers[0].srs;
-//											for ( var name in srs) {
-//												proj_all_services.push(name);
-//											}
-//											proj_all_services = proj_all_services
-//													.filter(function(elem, pos) {
-//														return proj_all_services
-//																.indexOf(elem) == pos;
-//													});
-//
-//											// the default selected Proj is 3857
-//											var selectedProj;
-//											for (var i = 0, len = proj_all_services.length; i < len; i++) {
-//
-//												if (proj_all_services[i]
-//														.toUpperCase() === "EPSG:3857"
-//														|| proj_all_services[i]
-//																.toUpperCase() === "EPSG:90013") {
-//													selectedProj = proj_all_services[i]
-//															.toUpperCase();
-//													break;
-//												}
-//											}
-//											if (typeof selectedProj === 'undefined') {
-//												for (var i = 0, len = proj_all_services.length; i < len; i++) {
-//													if (proj_all_services[i]
-//															.toUpperCase() === "CRS:84"
-//															|| proj_all_services[i]
-//																	.toUpperCase() === "EPSG:4326") {
-//														selectedProj = "EPSG:4326";
-//														break;
-//													}
-//												}
-//											}
-//											if (typeof selectedProj === 'undefined') {
-//												selectedProj = "EPSG:3857";
-//											}
-//											// 3) if options still be undefined,
-//											// we should use the proj from wms
-//											if (typeof map === 'undefined'
-//													&& typeof options === 'undefined') {
-//												var i = getProjIndex(selectedProj);
-//												options = OpenLayers.Util
-//														.extend(
-//																{
-//																	projection : selectedProj
-//																}, optionlst[i]);
-//												baselayer = baselayerlst[i];
-//												setmap(options, baselayer);
-//												loadMask.hide();
-//												loadMapPanel();
-//											}
-//
-//											wmslst.push(caps);
-//											addwms(caps);
-//											if (typeof ltree === 'undefined')
-//												initTtree();
-//										}
-//									})
-//						}
-					} else if (tmptype === "KML") {
-						addKMLfromURL(urls[i]);
+					} else if (tmptype === "KML" || tmpType === "KMZ") {
+						addKmx(urls[i], tmptype);
 						if (typeof ltree === 'undefined')
 							initTtree();
-					} else if (tmptype === "KMZ") {
-						addKMZfromURL(urls[i]);
-						if (typeof ltree === 'undefined')
-							initTtree();
-					} else if (tmptype === "GEORSS") {
+					}  else if (tmptype === "GEORSS") {
 						addGEORSSfromURL(urls[i]);
 						if (typeof ltree === 'undefined')
 							initTtree();

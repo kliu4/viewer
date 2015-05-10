@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jaxrs="http://cxf.apache.org/jaxrs"
-	xsi:schemaLocation="
-	http://www.springframework.org/schema/beans
-	http://www.springframework.org/schema/beans/spring-beans.xsd
-	http://cxf.apache.org/jaxrs
-	http://cxf.apache.org/schemas/jaxrs.xsd">
-
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.8.xsd
+		http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
 	<jaxrs:server id="dispatcherService" address="/dispatcher">
 		<jaxrs:serviceBeans>
 			<ref bean="dispatcherBean" />
@@ -14,4 +17,29 @@
 	</jaxrs:server>
 
 	<bean id="dispatcherBean" class="viewer.service.Dispatcher" />
+
+	<jdbc:embedded-database type="HSQL" id="dataSource"></jdbc:embedded-database>
+	<bean id="myEmf"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="packagesToScan" value="viewer.entity" />
+		<property name="jpaProperties">
+			<props>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.hbm2ddl.auto">create</prop>
+			</props>
+		</property>
+		<property name="persistenceProvider">
+			<bean class="org.hibernate.jpa.HibernatePersistenceProvider"></bean>
+		</property>
+	</bean>
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<!-- (this dependency is defined somewhere else) -->
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<jpa:repositories base-package="viewer.repository" entity-manager-factory-ref="myEmf" transaction-manager-ref="transactionManager"></jpa:repositories>
 </beans>
