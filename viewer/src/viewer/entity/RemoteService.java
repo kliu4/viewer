@@ -16,9 +16,7 @@ import org.hibernate.annotations.GenericGenerator;
 public class RemoteService {
 	
 	@Id 
-	@GeneratedValue(generator="uuid")
-	@GenericGenerator(name="uuid", strategy = "uuid2")
-	private String id;
+	private UUID id;
 
 	private String url;
 	
@@ -32,11 +30,11 @@ public class RemoteService {
 		this.url = url;
 	}
 
-	public String getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 
