@@ -28,6 +28,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -58,16 +59,16 @@ public class Dispatcher {
 
 		String remoteUrl = formatUrl(serviceUrl, serviceType);
 
-		List<RemoteService> services = remoteServiceRepository
-				.findFirst1ByUrlOrderByCreatedAtAsc(remoteUrl);
-
-		if (services.size() == 1) {
-			File file = new File(System.getProperty("webroot")
-					+ "WEB-INF/classes/data/services/"
-					+ services.get(0).getId());
-
-			return FileUtils.readFileToString(file);
-		}
+//		List<RemoteService> services = remoteServiceRepository
+//				.findFirst1ByUrlOrderByCreatedAtAsc(remoteUrl);
+//
+//		if (services.size() == 1) {
+//			File file = new File(System.getProperty("webroot")
+//					+ "WEB-INF/classes/data/services/"
+//					+ services.get(0).getId());
+//
+//			return FileUtils.readFileToString(file);
+//		}
 
 		if (serviceType == null)
 			return "";
@@ -112,6 +113,7 @@ public class Dispatcher {
 					}
 				}
 			}
+			//result = EntityUtils.toString(entity);
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 		} catch (IllegalStateException e) {
@@ -125,9 +127,9 @@ public class Dispatcher {
 		Long endTime = System.currentTimeMillis();
 		LOGGER.info("retrive service " + remoteUrl + " - " + (endTime - startTime) + " milliseconds");
 		
-		if (endTime - startTime > 10) {
-			service.saveService(remoteUrl, result);
-		}
+//		if (endTime - startTime > 10) {
+//			service.saveService(remoteUrl, result);
+//		}
 		return result;
 	}
 
@@ -190,9 +192,9 @@ public class Dispatcher {
 			Long endTime = System.currentTimeMillis();
 			LOGGER.info("retrive service " + kmzUrl + " - " + (endTime - startTime) + "milliseconds");
 			
-			if (endTime - startTime > 10) {
-				service.saveService(kmzUrl, result);
-			}
+//			if (endTime - startTime > 10) {
+//				service.saveService(kmzUrl, result);
+//			}
 			return result;
 
 		} catch (JDOMException e) {

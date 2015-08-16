@@ -27,11 +27,11 @@ public class DbService {
 
 	@PostConstruct
 	public void init() throws IOException {
-		String encoded = FileUtils.readFileToString(new File(
-				"/Users/kailiu/Downloads/coawst.xml"));
-		saveService(
-				"http://geoport-dev.whoi.edu/thredds/wms/coawst_4/use/fmrc/coawst_4_use_best.ncd?service=WMS&request=GetCapabilities",
-				encoded);
+//		String encoded = FileUtils.readFileToString(new File(
+//				"/Users/kailiu/Downloads/coawst.xml"));
+//		saveService(
+//				"http://geoport-dev.whoi.edu/thredds/wms/coawst_4/use/fmrc/coawst_4_use_best.ncd?service=WMS&request=GetCapabilities",
+//				encoded);
 
 		// RemoteService remoteService = new RemoteService();
 		// remoteService.setUrl("http://www.baidu.com");

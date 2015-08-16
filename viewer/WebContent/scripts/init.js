@@ -248,6 +248,7 @@ OpenLayers.Control.Click = OpenLayers
 											failure : function(response) {
 												// Ext.MessageBox.alert("alert",
 												// response.responseText);
+												loadMask.hide();
 											},
 											success : function(response) {
 												if (response.responseText
@@ -617,6 +618,7 @@ Ext
 										timeout : 60000,
 										failure : function(response) {
 											// if it failed, use EPSG:3857
+											loadMask.hide();
 											Ext.MessageBox.alert("Warning",
 													"Can not load map");
 										},
@@ -651,6 +653,7 @@ Ext
 					}
 				}
 			} catch (err) {
+				loadMask.hide();
 				Ext.MessageBox.alert("Warning", "Fail to load map");
 				urls = [];
 				serviceTypes = [];
