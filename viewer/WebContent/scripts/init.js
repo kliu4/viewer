@@ -138,7 +138,7 @@ function addKmx(url, kmxType) {
 	});
 	map.addControl(select);
 	select.activate();
-	var kmlname = decodeURIComponent(kmlurl);
+	var kmlname = decodeURIComponent(url);
 	var node = new Ext.tree.TreeNode({
 		layer : kmlLayer,
 		text : kmlname,
@@ -147,6 +147,7 @@ function addKmx(url, kmxType) {
 	});
 	root.appendChild(node);
 	activeNodes.push(node);
+	loadmask.hide();
 }
 
 function onPopupClose(evt) {
@@ -642,11 +643,11 @@ Ext
 										}
 									})
 						}
-					} else if (tmptype === "KML" || tmpType === "KMZ") {
-						addKmx(urls[i], tmptype);
+					} else if (tmpType === "KML" || tmpType === "KMZ") {
+						addKmx(urls[i], tmpType);
 						if (typeof ltree === 'undefined')
 							initTtree();
-					}  else if (tmptype === "GEORSS") {
+					}  else if (tmpType === "GEORSS") {
 						addGEORSSfromURL(urls[i]);
 						if (typeof ltree === 'undefined')
 							initTtree();
