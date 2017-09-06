@@ -9,7 +9,7 @@ To use this web application, you can create a war file and use Apache-Tomcat (To
 It supports simple RESTful pattern url to load WMS, KML, KMZ or GeoRss
 
 URL structure with parameters:
-https://climateatehome.org/viewer?url=service1,service2,....&servicetype=service1Type,service2Type,...&srs=supportedProjection
+https://climateathome.org/viewer?url=service1,service2,....&servicetype=service1Type,service2Type,...&srs=supportedProjection
 
 Parameters:
 
@@ -23,7 +23,7 @@ Two modes are supported: simple and advanced. The default mode is simple mode
 
 E.g.,
 
-https://climateatehome.org/viewer/?url=http://mrdata.usgs.gov/services/pr&servicetype=wms
-https://climateatehome.org/viewer/?url=http://mrdata.usgs.gov/services/pr&servicetype=wms&mode=advanced
-https://climateatehome.org/viewer/?url=https://developers.google.com/kml/documentation/KML_Samples.kml&servicetype=kml
+https://climateathome.org/viewer/?url=http://mrdata.usgs.gov/services/pr&servicetype=wms
+https://climateathome.org/viewer/?url=http://mrdata.usgs.gov/services/pr&servicetype=wms&mode=advanced
+https://climateathome.org/viewer/?url=https://developers.google.com/kml/documentation/KML_Samples.kml&servicetype=kml
 
