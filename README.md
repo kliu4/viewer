@@ -21,9 +21,8 @@ Parameters:
 
 Two modes are supported: simple and advanced. The default mode is simple mode
 
-E.g.,
+DEMO:
 
-https://climateathome.org/viewer/?url=http://mrdata.usgs.gov/services/pr&servicetype=wms
 https://climateathome.org/viewer/?url=http://mrdata.usgs.gov/services/pr&servicetype=wms&mode=advanced
-https://climateathome.org/viewer/?url=https://developers.google.com/kml/documentation/KML_Samples.kml&servicetype=kml
+https://climateathome.org/viewer/?url=http://mrdata.usgs.gov/services/pr&servicetype=wms
 
