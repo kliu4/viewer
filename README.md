@@ -1,8 +1,14 @@
 ## Viewer
 
+
+
 This small web application is used to visualize the WMS, KML, KMZ, GeoRSS
 
 To use this web application, you can create a war file and use Apache-Tomcat (Tomcat 7 is recommended) to publish it.
+
+
+
+
 
 ## API Reference
 
